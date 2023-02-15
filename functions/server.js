@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv")
 const morgan = require("morgan");
+const serverless = require('serverless-http');
 
 //setting node environment variables
 
@@ -28,7 +29,7 @@ mongoose
 const app = express();
 
 //initial route
-app.use("/api", require("./routes/index"));
+app.use("/api", require("../routes/index"));
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -41,6 +42,8 @@ app.use(bodyParser.json());
 // app.use(morgan("tiny"));
 
 //listening port
-app.listen(3000, () => {
-  console.log("Server is listening in ", process.env.PORT);
-});
+// app.listen("https://fozilbek-quiz.netlify.app", () => {
+//   console.log("Server is listening in ", "https://fozilbek-quiz.netlify.app");
+// });
+
+module.exports.handler = serverless(app)

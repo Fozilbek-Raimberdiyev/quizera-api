@@ -2,9 +2,11 @@
   "name": "todos",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "functions/server.js",
   "scripts": {
-    "dev": "node server.js"
+    "start": "node functions/server.js",
+    "dev": "nodemon functions/server.js",
+    "build": "netlify deploy --prod"
   },
   "keywords": [],
   "author": "Fozilbek Raimberdiyev",
@@ -27,7 +29,10 @@
     "pdf-parse": "^1.1.1",
     "webpack": "^5.75.0",
     "webpack-cli": "^5.0.1",
-    "yt-search": "^2.10.4"
+    "yt-search": "^2.10.4",
+    "netlify-cli": "^12.7.2",
+    "netlify-lambda": "^2.0.15",
+    "serverless-http": "^2.7.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",

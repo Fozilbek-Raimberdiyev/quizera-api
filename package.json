@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node functions/api.js",
     "dev": "nodemon functions/api.js",
-    "build": "netlify deploy --prod"
   },
   "engines": {
     "node": "v18.13.0"

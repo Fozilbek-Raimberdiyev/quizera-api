@@ -1,6 +1,6 @@
 const { Router } = require("express");
 const { User, userValSchema } = require("./users");
-const bcrypt = require("bcryptjs");
+const bcryptjs = require("bcryptjs");
 const router = Router();
 const jwt = require("jsonwebtoken");
 
@@ -15,13 +15,13 @@ router.post("/login", async (req, res) => {
       message: "Siz kiritgan email bo'yicha ma'lumot topilmadi",
     });
   }
-  let comparedPassword = await bcrypt.compare(password, existedUser.password);
+  let comparedPassword = await bcryptjs.compare(password, existedUser.password);
   if (!comparedPassword) {
     res.status(400).json({
       message: "Parol xato kiritildi",
     });
   }
-  // let jsonSignature = await bcrypt.hash(process.env.JSON_SIGNATURE, 10);
+  // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
   let payload = {
     userID : existedUser._id,
   }
@@ -58,7 +58,7 @@ router.post("/register", async (req, res) => {
 
   let user = new User(value);
   let savedUser = await user.save();
-  let jsonSignature = await bcrypt.hash(process.env.JSON_SIGNATURE, 10);
+  let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
   const token = jwt.sign({ savedUser }, jsonSignature, { expiresIn: "1h" });
   savedUser = await User.find().select({
     password: 0,

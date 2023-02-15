@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
 const router = require("express").Router();
-const bcrypt = require("bcrypt");
+const bcryptjs = require("bcryptjs");
 const Joi = require("joi");
 const SALT_ROUNDS = 10;
 //user schema defining
@@ -34,8 +34,8 @@ const userValSchema = Joi.object({
 });
 
 // userSchema.pre("save", async (next) => {
-//   const salt = await bcrypt.genSalt();
-//   this.password = await bcrypt.hash(this.password, salt);
+//   const salt = await bcryptjs.genSalt();
+//   this.password = await bcryptjs.hash(this.password, salt);
 //   next();
 // });
 
@@ -43,7 +43,7 @@ userSchema.pre('save', function(next) {
   const user = this;
   if (!user.isModified('password')) return next();
 
-  bcrypt.hash(user.password, SALT_ROUNDS, function(err, hashedPassword) {
+  bcryptjs.hash(user.password, SALT_ROUNDS, function(err, hashedPassword) {
     if (err) return next(err);
     user.password = hashedPassword;
     next();

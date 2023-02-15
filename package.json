@@ -4,8 +4,7 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "node server.js",
-    "build": "webpack"
+    "dev": "node server.js"
   },
   "keywords": [],
   "author": "Fozilbek Raimberdiyev",

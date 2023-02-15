@@ -29,7 +29,11 @@ mongoose
 const app = express();
 
 //initial route
-app.use("/api", require("../routes/index"));
+app.use("/", (req,res) => {
+  res.send({message : "Assalomu alaykum!"})
+})
+app.use("/.netlify/functions/api", require("../routes/index"));
+
 
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -42,8 +46,8 @@ app.use(bodyParser.json());
 // app.use(morgan("tiny"));
 
 // listening port
-app.listen(3000, () => {
-  console.log("Server is listening in ",3000);
-});
+// app.listen(3000, () => {
+//   console.log("Server is listening in ",3000);
+// });
 
 module.exports.handler = serverless(app)

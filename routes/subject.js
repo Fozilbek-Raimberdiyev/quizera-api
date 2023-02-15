@@ -32,7 +32,7 @@ const Subject = mongoose.model("subjects", subjectSchema);
 
 //defining routes
 //getting all subject list
-router.get("/", checkAuth, async (req, res) => {
+router.get("/", async (req, res) => {
   let { limit, page } = req.query;
   let subjects = await Subject.find()
     .skip((page - 1) * limit)

@@ -1,7 +1,7 @@
 const bodyParser = require("body-parser");
 const { Router } = require("express");
 const mongoose = require("mongoose");
-const morgan = require("morgan");
+const checkAuth = require("../middleware/auth")
 
 const router = Router();
 router.use(bodyParser.json())
@@ -18,8 +18,8 @@ let todoSchema = mongoose.Schema({
 let Todo = mongoose.model("todos", todoSchema);
 
 //get all data
-router.get("/", async (req, res) => {
-  // res.json({message : "Keldi"})
+router.get("/", checkAuth, async (req, res) => {
+  console.log(req.user)
   let pageNumber = req.query.page || 1;
   let pageLimit = req.query.limit || 10;
   let allTodos = await Todo.find()

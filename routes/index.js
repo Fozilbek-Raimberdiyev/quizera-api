@@ -7,7 +7,9 @@ router.use(require("body-parser").json())
 router.use(require("cors")({
     origin : "*"
 }))
-
+router.get("/", async(req,res) => {
+    res.status(200).send({message : "Assalomu alaykum!"})
+})
 router.use("/todos", require("./todos"))
 router.use("/auth", require("./signInAndSignup"))
 router.use("/permissions", require("./permissions"))

@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv")
 const morgan = require("morgan");
+const router = require("./routes")
 
 //setting node environment variables
 
@@ -32,7 +33,7 @@ app.get("/", (req,res) => {
 })
 
 //initial route
-app.use("/api", require("./routes/index"));
+app.use("/api", router);
 
 
 // parse application/x-www-form-urlencoded

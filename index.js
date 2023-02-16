@@ -27,6 +27,10 @@ mongoose
 //declaring app
 const app = express();
 
+app.get("/", (req,res) => {
+  res.send({message : "Assalomu alaykum!"})
+})
+
 //initial route
 app.use("/api", require("./routes/index"));
 

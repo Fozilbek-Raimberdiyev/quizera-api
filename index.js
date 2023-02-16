@@ -8,11 +8,12 @@ const router = require("./routes")
 
 //setting node environment variables
 
-if(process.env.NODE_ENV==="production") {
-  dotenv.config({path : ".env.production  "})
-} else {
-  dotenv.config({path : ".env"})
-}
+// if(process.env.NODE_ENV==="production") {
+//   dotenv.config({path : ".env.production  "})
+// } else {
+//   dotenv.config({path : ".env"})
+// }
+dotenv.config({path : ".env.production"})
 
 //connecting to database
 mongoose.set("strictQuery", false);
@@ -28,12 +29,9 @@ mongoose
 //declaring app
 const app = express();
 
-app.get("/", (req,res) => {
-  res.send(router)
-})
 
-app.get("/api", (req,res) => {
-  res.send(router)
+app.get("/", (req,res) => {
+  res.send({message : "Assalomu alaykum!"})
 })
 
 //initial route

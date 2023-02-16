@@ -2,13 +2,13 @@
   "name": "todos",
   "version": "1.0.0",
   "description": "",
-  "main": "functions/api.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node functions/api.js",
-    "dev": "nodemon functions/api.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "engines": {
-    "node": "v18.13.0"
+    "node": "14.x"
   },
   "keywords": [],
   "author": "Fozilbek Raimberdiyev",
@@ -23,13 +23,7 @@
     "joi": "^17.7.0",
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.8.3",
-    "morgan": "^1.10.0",
-    "netlify-cli": "^12.12.0",
-    "netlify-lambda": "^2.0.15",
-    "serverless-http": "^2.7.0",
-    "webpack": "^5.75.0",
-    "webpack-cli": "^5.0.1",
-    "yt-search": "^2.10.4"
+    "morgan": "^1.10.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.20.7",

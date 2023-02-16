@@ -32,6 +32,10 @@ app.get("/", (req,res) => {
   res.send({message : "Assalomu alaykum!"})
 })
 
+app.get("/api", () => {
+  return router
+})
+
 //initial route
 app.use("/api", router);
 

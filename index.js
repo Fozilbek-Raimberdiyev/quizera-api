@@ -29,7 +29,7 @@ mongoose
 const app = express();
 
 app.get("/", (req,res) => {
-  res.send({message : "Assalomu alaykum!"})
+  res.send(router)
 })
 
 app.get("/api", (req,res) => {

@@ -32,7 +32,7 @@ app.get("/", (req,res) => {
   res.send({message : "Assalomu alaykum!"})
 })
 
-app.get("/api", () => {
+app.use("/api", (req,res) => {
   return router
 })
 

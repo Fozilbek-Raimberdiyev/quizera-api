@@ -8,12 +8,12 @@ const router = require("./routes")
 
 //setting node environment variables
 
-// if(process.env.NODE_ENV==="production") {
-//   dotenv.config({path : ".env.production  "})
-// } else {
-//   dotenv.config({path : ".env"})
-// }
-dotenv.config({path : ".env.production"})
+if(process.env.NODE_ENV==="production") {
+  dotenv.config({path : ".env.production  "})
+} else {
+  dotenv.config({path : ".env"})
+}
+// dotenv.config({path : ".env.production"})
 
 //connecting to database
 mongoose.set("strictQuery", false);
@@ -28,6 +28,13 @@ mongoose
 
 //declaring app
 const app = express();
+
+//using cors
+app.use(cors({
+  origin: 'https://fozilbek.netlify.app', // replace with the actual origin of your Vue.js app
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 
 app.get("/", (req,res) => {

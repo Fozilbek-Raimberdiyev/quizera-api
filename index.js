@@ -8,12 +8,12 @@ const router = require("./routes")
 
 //setting node environment variables
 
-if(process.env.NODE_ENV==="production") {
-  dotenv.config({path : ".env.production  "})
-} else {
-  dotenv.config({path : ".env"})
-}
-// dotenv.config({path : ".env.production"})
+// if(process.env.NODE_ENV==="production") {
+//   dotenv.config({path : ".env.production  "})
+// } else {
+//   dotenv.config({path : ".env"})
+// }
+dotenv.config({path : ".env.production"})
 
 //connecting to database
 mongoose.set("strictQuery", false);

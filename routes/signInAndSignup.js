@@ -3,6 +3,7 @@ const { User, userValSchema } = require("./users");
 const bcryptjs = require("bcryptjs");
 const router = Router();
 const jwt = require("jsonwebtoken");
+const checkAuth = require("../middleware/auth");
 
 router.post("/login", async (req, res) => {
   let { email, password } = req.body;
@@ -48,25 +49,44 @@ router.post("/register", async (req, res) => {
   }
   let { email, phoneNumber } = req.body;
 
-  let existedUser = await User.findOne({ email, phoneNumber });
-  if (existedUser) {
+  let existedEmail = await User.findOne({ email });
+  let existedPhoneNumber = await User.findOne({ phoneNumber });
+  if (existedEmail) {
     return res.status(400).json({
       message:
-        "Bu email yoki raqam orqali allaqachon tizimdan ro'yhatdan o'tilgan",
+        "Bu email orqali allaqachon tizimdan ro'yhatdan o'tilgan",
+    });
+  }  if (existedPhoneNumber) {
+    return res.status(400).json({
+      message:
+        "Bu raqam orqali allaqachon tizimdan ro'yhatdan o'tilgan",
     });
   }
-
-  let user = new User(value);
+  try {
+    let user = await User(value);
   let savedUser = await user.save();
   let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
   const token = jwt.sign({ savedUser }, jsonSignature, { expiresIn: "1h" });
   savedUser = await User.find().select({
     password: 0,
   });
-  res.header("x-auth-token", token).status(201).send({
+  res.status(201).send({
     user: user,
     token,
   });
+  } catch(e) {
+    res.errored.message = "Server error"
+  }
 });
+
+
+//get-by-id user
+router.get("/user", checkAuth, async(req,res) => {
+  const user = req.user;
+  let currentUser = await User.findById(user.userID)
+  console.log(currentUser, "user")
+  const role = currentUser.role
+  res.status(200).send(role)
+})
 
 module.exports = router;

@@ -28,7 +28,7 @@ const userValSchema = Joi.object({
   birdthData: Joi.string().required(),
   email: Joi.string().email().required(),
   phoneNumber: Joi.number().required(),
-  role: Joi.string(),
+  role: Joi.string().required(),
   permissions: Joi.string(),
   password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")).required(),
 });
@@ -54,9 +54,13 @@ userSchema.pre('save', function(next) {
 //User model defining
 let User = mongoose.model("users", userSchema);
 
-router.get("/users", () => {});
+router.get("/", async (req,res) => {
+  let users = await User.find().select({password : 0});
+  res.send(users)
+});
 
 module.exports = {
   User,
   userValSchema,
+  router
 };

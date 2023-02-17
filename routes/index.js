@@ -15,4 +15,5 @@ router.use("/auth", require("./signInAndSignup"))
 router.use("/permissions", require("./permissions"))
 router.use("/subjects", subjectController)
 router.use("/questions", questionController)
+router.use("/users", require('./users').router)
 module.exports = router

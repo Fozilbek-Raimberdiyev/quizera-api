@@ -35,6 +35,7 @@ router.get("/", checkAuth, async (req, res) => {
 //add todo
 router.post("/add", async (req, res) => {
   let body = req.body;
+  console.log(body)
   const todo = new Todo(body);
   const savedTodo = await todo.save();
   res.status(201).send({ message: "Todo added succesfully" });

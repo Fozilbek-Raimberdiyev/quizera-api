@@ -49,9 +49,9 @@ router.post("/add", checkAuth, async (req, res) => {
       message: error.details[0].message,
     });
   }
-  let newSubject = await Subject(req.body);
+  let newSubject = await  Subject(req.body);
   let savedSubject = await newSubject.save();
-  res.status(201).send(savedSubject);
+  res.status(201).send({savedSubject,message : "Fan muvaffaqqiyatli qo'shildi"});
 });
 
 //get by id

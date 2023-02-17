@@ -8,11 +8,10 @@ const router = require("./routes")
 
 //setting node environment variables
 
-// if(process.env.NODE_ENV==="production") {
-//   dotenv.config({path : ".env.production  "})
-// } else {
-//   dotenv.config({path : ".env"})
-// }
+//for developing
+// dotenv.config({path : ".env"})
+
+//for production and need to be this uncomment while deploying to production
 dotenv.config({path : ".env.production"})
 
 //connecting to database
@@ -31,7 +30,7 @@ const app = express();
 
 //using cors
 app.use(cors({
-  origin: 'https://fozilbek.netlify.app', // replace with the actual origin of your Vue.js app
+  origin: ['https://fozilbek.netlify.app','http://localhost:8080'], // replace with the actual origin of your Vue.js app
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));

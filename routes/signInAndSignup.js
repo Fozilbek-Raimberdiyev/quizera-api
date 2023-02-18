@@ -84,7 +84,6 @@ router.post("/register", async (req, res) => {
 router.get("/user", checkAuth, async(req,res) => {
   const user = req.user;
   let currentUser = await User.findById(user.userID)
-  console.log(currentUser, "user")
   const role = currentUser.role
   res.status(200).send(role)
 })

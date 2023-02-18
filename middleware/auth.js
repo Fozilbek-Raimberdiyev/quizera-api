@@ -5,12 +5,13 @@ async function checkAuth(req, res, next) {
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
+  
   try {
     const decodedToken = jwt.verify(token, process.env.JSON_SIGNATURE);
     req.user = decodedToken;
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized va catch error" });
+    return res.status(401).json({ message: "Unauthorized"});
   }
 }
 

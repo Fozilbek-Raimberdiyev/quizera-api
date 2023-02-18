@@ -2,6 +2,7 @@ const { default: mongoose } = require("mongoose");
 const router = require("express").Router();
 const bcryptjs = require("bcryptjs");
 const Joi = require("joi");
+const checkAuth = require("../middleware/auth");
 const SALT_ROUNDS = 10;
 //user schema defining
 const userSchema = mongoose.Schema({
@@ -54,7 +55,7 @@ userSchema.pre('save', function(next) {
 //User model defining
 let User = mongoose.model("users", userSchema);
 
-router.get("/", async (req,res) => {
+router.get("/", checkAuth, async (req,res) => {
   let users = await User.find().select({password : 0});
   res.send(users)
 });

@@ -2,6 +2,7 @@ const router = require("express").Router();
 const mongoose = require("mongoose");
 const checkAuth = require("../middleware/auth");
 const Joi = require("joi");
+const { User } = require("./users");
 const Question = require("./questions").Question;
 
 //countQuestionDefine
@@ -17,6 +18,8 @@ const subjectSchema = new mongoose.Schema({
   isDifferent: Boolean,
   grades: [Object],
   point: Number,
+  members: [Object],
+  authorId: String,
 });
 
 const subjectValSchema = Joi.object({
@@ -26,19 +29,66 @@ const subjectValSchema = Joi.object({
   isDifferent: Joi.boolean().required(),
   grades: Joi.array(),
   point: Joi.number(),
+  members: Joi.array().required(),
+  authorId: Joi.string().required(),
 });
 
 const Subject = mongoose.model("subjects", subjectSchema);
 
 //defining routes
 //getting all subject list
-router.get("/", async (req, res) => {
+router.get("/", checkAuth, async (req, res) => {
+  let userID = req.user.userID;
+  let user = await User.findById(userID);
   let { limit, page } = req.query;
-  let subjects = await Subject.find()
+  let subjectsforAdmin = await Subject.find()
     .skip((page - 1) * limit)
     .limit(limit);
-  let total = await Subject.countDocuments();
-  res.status(200).send({ subjects, total });
+  let totalForAdmin = await Subject.countDocuments();
+  if (user.role === "admin") {
+    return res
+      .status(200)
+      .send({ subjects: subjectsforAdmin, total: totalForAdmin });
+  }
+  let allSubjects = await Subject.find();
+  let forAllSubjects = [];
+  let spesicSubjects = [];
+  if (user.role === "teacher") {
+    let subjectsforTeacher = [];
+    for (let subject of allSubjects) {
+      if (
+        subject.authorId === userID ||
+        subject.members.some((member) => member.label === user.email)
+      ) {
+        subjectsforTeacher.push(subject);
+      }
+    }
+    if (page === 1) {
+      page = 0;
+    }
+    let subjectsforTeacherForPag = subjectsforTeacher.slice(
+      page - 1 * limit,
+      limit * page
+    );
+    const total = subjectsforTeacher.length;
+    return res.status(200).send({ subjects: subjectsforTeacherForPag, total });
+  }
+  for (let element of allSubjects) {
+    if (element.members.length === 0) {
+      forAllSubjects.push(element);
+    } else if (element.members.some((member) => member.label === user.email)) {
+      spesicSubjects.push(element);
+    }
+  }
+  // let allowSubjects = subjects.filter(subject => {
+  //   if(subject?.members.some(m => m.label === user.email)) {
+  //     return subject
+  //   }
+  // })
+  let subjects = forAllSubjects.concat(spesicSubjects);
+  subjects = subjects.slice(page - 1 * limit, limit * page);
+  const total = subjects.length;
+  return res.status(200).send({ subjects, total });
 });
 
 //add subject route
@@ -49,9 +99,11 @@ router.post("/add", checkAuth, async (req, res) => {
       message: error.details[0].message,
     });
   }
-  let newSubject = await  Subject(req.body);
+  let newSubject = await Subject(req.body);
   let savedSubject = await newSubject.save();
-  res.status(201).send({savedSubject,message : "Fan muvaffaqqiyatli qo'shildi"});
+  res
+    .status(201)
+    .send({ savedSubject, message: "Fan muvaffaqqiyatli qo'shildi" });
 });
 
 //get by id
@@ -134,3 +186,21 @@ router.delete("/delete", async (req, res) => {
 //   console.log(res)
 // }))
 module.exports = { subjectController: router, Subject };
+
+[
+  // {
+  //   name: "John",
+  //   job: "Developer",
+  //   stacks: ["js", "nodejs"],
+  // },
+  // {
+  //   name : "Doe",
+  //   job : "Developer",
+  //   stacks : ["java", "c++"]
+  // },
+  // {
+  //   name : "Anvar",
+  //   job : "Developer",
+  //   stacks : ["c#"]
+  // }
+];

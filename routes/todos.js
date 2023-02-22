@@ -1,5 +1,6 @@
 const bodyParser = require("body-parser");
 const { Router } = require("express");
+const Joi = require("joi");
 const mongoose = require("mongoose");
 const checkAuth = require("../middleware/auth")
 
@@ -12,7 +13,15 @@ let todoSchema = mongoose.Schema({
   date: { type: Date, default: Date.now },
   img: Buffer,
   endDate: Date,
+  authorId : String
 });
+
+let todoValidSchema = Joi.object({
+  name : Joi.string().required(),
+  description :Joi.string().required(),
+  endDate : Joi.date().required(),
+  authorId : Joi.string().required()
+})
 
 //todo model
 let Todo = mongoose.model("todos", todoSchema);
@@ -22,7 +31,7 @@ router.get("/", checkAuth, async (req, res) => {
   console.log(req.user)
   let pageNumber = req.query.page || 1;
   let pageLimit = req.query.limit || 10;
-  let allTodos = await Todo.find()
+  let allTodos = await Todo.find({authorId : req.user.userID})
     .skip((pageNumber - 1) * pageLimit)
     .limit(pageLimit);
     let total = await Todo.countDocuments()
@@ -33,8 +42,13 @@ router.get("/", checkAuth, async (req, res) => {
 });
 
 //add todo
-router.post("/add", async (req, res) => {
+router.post("/add",checkAuth, async (req, res) => {
   let body = req.body;
+  req.body.authorId = req.user.userID
+  let {error,value} = todoValidSchema.validate(req.body);
+  if(error) {
+  return res.status(400).send({message : error.details[0].message})
+  }
   console.log(body)
   const todo = new Todo(body);
   const savedTodo = await todo.save();

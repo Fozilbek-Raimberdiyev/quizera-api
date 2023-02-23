@@ -66,12 +66,12 @@ router.get("/", checkAuth, async (req, res) => {
     if (page === 1) {
       page = 0;
     }
-    let subjectsforTeacherForPag = subjectsforTeacher.slice(
-      page - 1 * limit,
-      limit * page
-    );
+    // let subjectsforTeacherForPag = subjectsforTeacher.slice(
+    //   page - 1 * limit,
+    //   limit * page
+    // );
     const total = subjectsforTeacher.length;
-    return res.status(200).send({ subjects: subjectsforTeacherForPag, total });
+    return res.status(200).send({ subjects: subjectsforTeacher, total });
   }
   for (let element of allSubjects) {
     if (element.members.length === 0) {

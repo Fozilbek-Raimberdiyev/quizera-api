@@ -31,7 +31,6 @@ let Todo = mongoose.model("todos", todoSchema);
 
 //get all data
 router.get("/", checkAuth, async (req, res) => {
-  console.log(req.user)
   let pageNumber = req.query.page || 1;
   let pageLimit = req.query.limit || 10;
   let allTodos = await Todo.find({authorId : req.user.userID})

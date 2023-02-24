@@ -20,6 +20,11 @@ const subjectSchema = new mongoose.Schema({
   point: Number,
   members: [Object],
   authorId: String,
+  authorFullName : String,
+  createdDate : {
+    type : Number,
+    default : new Date().getTime()
+  }
 });
 
 const subjectValSchema = Joi.object({
@@ -31,6 +36,8 @@ const subjectValSchema = Joi.object({
   point: Joi.number(),
   members: Joi.array().required(),
   authorId: Joi.string().required(),
+  authorFullName : Joi.string(),
+  createdDate : Joi.number()
 });
 
 const Subject = mongoose.model("subjects", subjectSchema);
@@ -44,51 +51,30 @@ router.get("/", checkAuth, async (req, res) => {
   let subjectsforAdmin = await Subject.find()
     .skip((page - 1) * limit)
     .limit(limit);
-  let totalForAdmin = await Subject.countDocuments();
-  if (user.role === "admin") {
-    return res
-      .status(200)
-      .send({ subjects: subjectsforAdmin, total: totalForAdmin });
-  }
-  let allSubjects = await Subject.find();
-  let forAllSubjects = [];
-  let spesicSubjects = [];
-  if (user.role === "teacher") {
-    let subjectsforTeacher = [];
-    for (let subject of allSubjects) {
-      if (
-        subject.authorId === userID ||
-        subject.members.some((member) => member.label === user.email)
-      ) {
-        subjectsforTeacher.push(subject);
+  if(user.role === "admin") {
+    let total = await Subject.countDocuments()
+    return res.status(200).send({subjects : subjectsforAdmin, total })
+  } else if(user.role==="teacher") {
+    let allSubjects = await Subject.find();
+    let subjects = []
+      for(let key of allSubjects) {
+        if(key.authorId===userID || key.members.some(member => member.value === user.email)) {
+          subjects.push(key)
+        }
+      }
+      let total = subjects.length;
+      return res.status(200).send({subjects, total})
+  } else if(user.role === "student") {
+    let allSubjects = await Subject.find();
+    let subjects = []
+    for(let subject of allSubjects) {
+      if(subject.members.some(member => member.value === user.email)) {
+        subjects.push(subject)
       }
     }
-    if (page === 1) {
-      page = 0;
-    }
-    // let subjectsforTeacherForPag = subjectsforTeacher.slice(
-    //   page - 1 * limit,
-    //   limit * page
-    // );
-    const total = subjectsforTeacher.length;
-    return res.status(200).send({ subjects: subjectsforTeacher, total });
+    let total = subjects.length
+    return res.status(200).send({subjects, total})
   }
-  for (let element of allSubjects) {
-    if (element.members.length === 0) {
-      forAllSubjects.push(element);
-    } else if (element.members.some((member) => member.label === user.email)) {
-      spesicSubjects.push(element);
-    }
-  }
-  // let allowSubjects = subjects.filter(subject => {
-  //   if(subject?.members.some(m => m.label === user.email)) {
-  //     return subject
-  //   }
-  // })
-  let subjects = forAllSubjects.concat(spesicSubjects);
-  subjects = subjects.slice(page - 1 * limit, limit * page);
-  const total = subjects.length;
-  return res.status(200).send({ subjects, total });
 });
 
 //add subject route
@@ -99,6 +85,8 @@ router.post("/add", checkAuth, async (req, res) => {
       message: error.details[0].message,
     });
   }
+  const user = await User.findById(req.user.userID)
+  req.body["authorFullName"] = user.firstName + " " + user.lastName;
   let newSubject = await Subject(req.body);
   let savedSubject = await newSubject.save();
   res
@@ -116,10 +104,6 @@ router.get("/:id", async (req, res) => {
     return res.status(404).json({ message: "Fan topilmadi" });
   }
 
-  // subject.grades.forEach((grade) => {
-  //   var key = grade["hasCount"]
-  //   countQuestions(+grade.grade).then((number) => key =  number);
-  // });
 
   for (let i = 0; i < subject.grades.length; i++) {
     const count = await Question.find({
@@ -177,30 +161,5 @@ router.delete("/delete", async (req, res) => {
   }
 });
 
-// async function getQuestions(limit) {
-//   let questions = await Subject.find().skip(0).limit(limit);
-//   return questions
-// }
-// let questions = getQuestions(4)
-// console.log(questions.then((res) => {
-//   console.log(res)
-// }))
 module.exports = { subjectController: router, Subject };
 
-[
-  // {
-  //   name: "John",
-  //   job: "Developer",
-  //   stacks: ["js", "nodejs"],
-  // },
-  // {
-  //   name : "Doe",
-  //   job : "Developer",
-  //   stacks : ["java", "c++"]
-  // },
-  // {
-  //   name : "Anvar",
-  //   job : "Developer",
-  //   stacks : ["c#"]
-  // }
-];

@@ -12,7 +12,7 @@ router.post("/login", async (req, res) => {
   }
   let existedUser = await User.findOne({ email });
   if (!existedUser) {
-  return  res.status(400).json({
+    return res.status(400).json({
       message: "Siz kiritgan email bo'yicha ma'lumot topilmadi",
     });
   }
@@ -65,12 +65,17 @@ router.post("/register", async (req, res) => {
   try {
     let user = await User(value);
     let savedUser = await user.save();
-    let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
-    const token = jwt.sign({ savedUser }, jsonSignature, { expiresIn: "1h" });
+    // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
+    let payload = {
+      userID: savedUser._id,
+    };
+    const token = jwt.sign(payload, process.env.JSON_SIGNATURE, {
+      expiresIn: 60 * 60 * 24,
+    });
     savedUser = await User.find().select({
       password: 0,
     });
-    res.status(201).send({
+    return res.status(201).send({
       user: user,
       token,
     });
@@ -79,25 +84,25 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
 //get-by-email
-router.get("/user/:email", checkAuth,async(req, res) => {
+router.get("/user/:email", checkAuth, async (req, res) => {
   const email = req.params.email;
-  if(!email) {
-    return res.status(400).send({message : "Bad request"})
+  if (!email) {
+    return res.status(400).send({ message: "Bad request" });
   }
   let users = await User.find();
-  users =  users.filter((user) => user.email.toLocaleLowerCase().includes(email.toLocaleLowerCase()))
-  console.log(users)
-  return res.status(200).send(users)
-})
+  users = users.filter((user) =>
+    user.email.toLocaleLowerCase().includes(email.toLocaleLowerCase())
+  );
+  return res.status(200).send(users);
+});
 
 //get-by-id user
 router.get("/user", checkAuth, async (req, res) => {
   const user = req.user;
   let currentUser = await User.findById(user.userID);
   const role = currentUser.role;
-  res.status(200).send(role);
+  res.status(200).send(role || "student");
 });
 
 module.exports = router;

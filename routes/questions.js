@@ -138,7 +138,6 @@ router.post("/", async (req, res) => {
   let questions = shuffleArray(result);
   questions.forEach((question) => shuffleArray(question.options));
   let total = await Question.find({ subjectId: subjectId }).countDocuments();
-  console.log()
   subject.isDifferent = subject?.isDifferent === "true" ? true : false;
   if (!subject?.isDifferent) {
     let temp = [...result].reverse();

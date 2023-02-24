@@ -20,6 +20,10 @@ const userSchema = mongoose.Schema({
   role: String,
   permissions: Array,
   password: String,
+  dataRegister : {
+    type : Number,
+    default : new Date().getTime()
+  }
 });
 
 //user validate schema
@@ -32,6 +36,7 @@ const userValSchema = Joi.object({
   role: Joi.string().required(),
   permissions: Joi.string(),
   password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")).required(),
+  dataRegister : Joi.number()
 });
 
 // userSchema.pre("save", async (next) => {

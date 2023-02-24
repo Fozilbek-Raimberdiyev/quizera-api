@@ -24,7 +24,8 @@ const subjectSchema = new mongoose.Schema({
   createdDate : {
     type : Number,
     default : new Date().getTime()
-  }
+  },
+  isForAll : Boolean
 });
 
 const subjectValSchema = Joi.object({
@@ -37,7 +38,8 @@ const subjectValSchema = Joi.object({
   members: Joi.array().required(),
   authorId: Joi.string().required(),
   authorFullName : Joi.string(),
-  createdDate : Joi.number()
+  createdDate : Joi.number(),
+  isForAll : Joi.boolean()
 });
 
 const Subject = mongoose.model("subjects", subjectSchema);
@@ -58,7 +60,7 @@ router.get("/", checkAuth, async (req, res) => {
     let allSubjects = await Subject.find();
     let subjects = []
       for(let key of allSubjects) {
-        if(key.authorId===userID || key.members.some(member => member.value === user.email)) {
+        if(key.authorId===userID || key.members.some(member => member.value === user.email) || key.isForAll) {
           subjects.push(key)
         }
       }
@@ -68,7 +70,7 @@ router.get("/", checkAuth, async (req, res) => {
     let allSubjects = await Subject.find();
     let subjects = []
     for(let subject of allSubjects) {
-      if(subject.members.some(member => member.value === user.email)) {
+      if(subject.members.some(member => member.value === user.email) || subject.isForAll) {
         subjects.push(subject)
       }
     }

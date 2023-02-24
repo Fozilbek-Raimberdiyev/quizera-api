@@ -13,14 +13,17 @@ let todoSchema = mongoose.Schema({
   date: { type: Date, default: Date.now },
   img: Buffer,
   endDate: Date,
-  authorId : String
+  authorId : String,
+  isMaked : Boolean,
+  makedDate : Date
 });
 
 let todoValidSchema = Joi.object({
   name : Joi.string().required(),
   description :Joi.string().required(),
   endDate : Joi.date().required(),
-  authorId : Joi.string().required()
+  authorId : Joi.string().required(),
+  isMaked : Joi.boolean().required(),
 })
 
 //todo model
@@ -49,7 +52,6 @@ router.post("/add",checkAuth, async (req, res) => {
   if(error) {
   return res.status(400).send({message : error.details[0].message})
   }
-  console.log(body)
   const todo = new Todo(body);
   const savedTodo = await todo.save();
   res.status(201).send({ message: "Todo added succesfully" });
@@ -77,6 +79,14 @@ router.put("/update", async (req, res) => {
     return res.json({ message: "Todo succesfully updated" });
   });
 });
+
+//update status todo
+router.put("/statusUpdate", checkAuth, async(req, res) => {
+  let data = req.body.status
+  const ID = req.query.ID;
+const updated =   await Todo.updateOne({_id : ID }, {$set : {isMaked : data, makedDate : new Date().getTime()}});
+return res.status(200).send(updated)
+})
 
 //delete by id
 router.delete("/delete", async (req, res) => {

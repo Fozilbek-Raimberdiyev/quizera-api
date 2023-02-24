@@ -2,17 +2,16 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
-const dotenv = require("dotenv")
+const dotenv = require("dotenv");
 const morgan = require("morgan");
-const router = require("./routes")
-
+const router = require("./routes");
 //setting node environment variables
 
 //for developing
 // dotenv.config({path : ".env"})
 
 //for production and need to be this uncomment while deploying to production
-dotenv.config({path : ".env.production"})
+dotenv.config({ path: ".env.production" });
 
 //connecting to database
 mongoose.set("strictQuery", false);
@@ -29,32 +28,33 @@ mongoose
 const app = express();
 
 //using cors
-app.use(cors({
-  origin: ['https://fozilbek.netlify.app','http://localhost:8080'], // replace with the actual origin of your Vue.js app
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+app.use(
+  cors({
+    origin: ["https://fozilbek.netlify.app", "http://localhost:8080"], // replace with the actual origin of your Vue.js app
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-
-app.get("/", (req,res) => {
-  res.send({message : "Assalomu alaykum!"})
-})
+app.get("/", (req, res) => {
+  res.send({ message: "Assalomu alaykum!" });
+});
 
 //initial route
 app.use("/api", router);
 
-
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
-app.use(express.json())
+app.use(express.json());
 // parse application/json
 app.use(bodyParser.json());
 
 //using morgan logger
 // app.use(morgan("tiny"));
 
+
 // listening port
 app.listen(3000, () => {
-  console.log("Server is listening in ",3000);
+  console.log("Server is listening in ", 3000);
 });

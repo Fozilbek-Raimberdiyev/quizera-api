@@ -97,12 +97,33 @@ router.get("/user/:email", checkAuth, async (req, res) => {
   return res.status(200).send(users);
 });
 
-//get-by-id user
+//get-by-id
+router.get("/:id/user", checkAuth, async (req, res) => {
+  const id = req.params.id;
+  if (!id) {
+    return res.status(400).send({ message: "Bad request" });
+  }
+  let user = await User.findById(id);
+  user.password = undefined
+  return res.status(200).send(user);
+});
+
+//get-by-id currentuser
 router.get("/user", checkAuth, async (req, res) => {
   const user = req.user;
   let currentUser = await User.findById(user.userID);
   const role = currentUser.role;
   res.status(200).send(role || "student");
 });
+
+//update user
+router.put("/updateUser", checkAuth, async(req, res) => {
+  let user = req.body;
+  const updated = await User.updateOne(
+    { _id: user._id },
+    { $set: user }
+  );
+  return res.status(200).send({message : "Muvaffaqqiyatli", updated})
+})
 
 module.exports = router;

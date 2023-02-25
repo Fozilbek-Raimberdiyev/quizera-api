@@ -61,12 +61,13 @@ router.get("/", checkAuth, async (req, res) => {
     isForReference = false
   }
   let { limit, page } = req.query;
-  let subjectsforAdmin = await Subject.find()
-    .skip((page - 1) * limit)
-    .limit(limit);
+  // let subjectsforAdmin = await Subject.find()
+  //   .skip((page - 1) * limit)
+  //   .limit(limit);
   if (user.role === "admin") {
+    let subjects = await Subject.find()
     let total = await Subject.countDocuments();
-    return res.status(200).send({ subjects: subjectsforAdmin, total });
+    return res.status(200).send({ subjects, total });
   } else if (user.role === "teacher") {
     let allSubjects = await Subject.find();
     let subjects = [];

@@ -126,4 +126,17 @@ router.put("/updateUser", checkAuth, async(req, res) => {
   return res.status(200).send({message : "Muvaffaqqiyatli", updated})
 })
 
+//delete user
+router.delete("/delete", async (req, res) => {
+  User.findByIdAndRemove(req.query.ID, (err, data) => {
+    if (err) {
+      return res.status(500).json({ message: "Error deleting user" });
+    }
+    if (!data) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    return res.json({ message: "User succesfully deleted" });
+  });
+});
+
 module.exports = router;

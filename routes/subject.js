@@ -4,6 +4,8 @@ const checkAuth = require("../middleware/auth");
 const Joi = require("joi");
 const { User } = require("./users");
 const Question = require("./questions").Question;
+const SALT_ROUNDS = 10;
+const bcryptjs = require("bcryptjs")
 
 //countQuestionDefine
 async function countQuestions(ball) {
@@ -30,6 +32,8 @@ const subjectSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  password : String,
+  isHasPassword : Boolean
 });
 
 const subjectValSchema = Joi.object({
@@ -45,7 +49,22 @@ const subjectValSchema = Joi.object({
   createdDate: Joi.number(),
   isForAll: Joi.boolean(),
   isStarted: Joi.boolean().required(),
+  password : Joi.string(),
+  isHasPassword : Joi.boolean().required()
 });
+
+//setting hash password subject
+subjectSchema.pre('save', function(next) {
+  const subject = this;
+  if (!subject.isModified('password')) return next();
+
+  bcryptjs.hash(subject.password, SALT_ROUNDS, function(err, hashedPassword) {
+    if (err) return next(err);
+    subject.password = hashedPassword;
+    next();
+  });
+});
+
 
 const Subject = mongoose.model("subjects", subjectSchema);
 
@@ -140,6 +159,7 @@ router.post("/add", checkAuth, async (req, res) => {
   req.body["authorFullName"] = user.firstName + " " + user.lastName;
   let newSubject = await Subject(req.body);
   let savedSubject = await newSubject.save();
+  savedSubject.password = undefined
   res
     .status(201)
     .send({ savedSubject, message: "Fan muvaffaqqiyatli qo'shildi" });
@@ -221,5 +241,16 @@ router.delete("/delete", async (req, res) => {
     res.status(500).send("Internal server error");
   }
 });
+
+//check password subject
+router.post("/checkPassword", checkAuth, async(req, res) => {
+  const {subject, password} = req.body;
+  const existedSubject = await Subject.findById(subject._id);
+  let comparedPassword = await bcryptjs.compare(password, existedSubject.password);
+  if(!comparedPassword) {
+    return res.status(400).send({message : "Parol xato kiritildi..."})
+  }
+  return res.status(200).send({isAllowed: true})
+})
 
 module.exports = { subjectController: router, Subject };

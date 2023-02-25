@@ -61,6 +61,7 @@ router.get("/", checkAuth, async (req, res) => {
     isForReference = false
   }
   let { limit, page } = req.query;
+  let allSubjects = await Subject.find()
   // let subjectsforAdmin = await Subject.find()
   //   .skip((page - 1) * limit)
   //   .limit(limit);
@@ -68,31 +69,49 @@ router.get("/", checkAuth, async (req, res) => {
     let subjects = await Subject.find()
     let total = await Subject.countDocuments();
     return res.status(200).send({ subjects, total });
-  } else if (user.role === "teacher") {
-    let allSubjects = await Subject.find();
-    let subjects = [];
-    for (let key of allSubjects) {
-      if(!isForReference) {
-        if (
-          (key.authorId === userID ||
-            key.members.some((member) => member.value === user.email) ||
-            key.isForAll) &&
-          (key.isStarted  || isForReference)
-        ) {
-          subjects.push(key);
+  } 
+  // else if (user.role === "teacher") {
+  //   let allSubjects = await Subject.find();
+  //   let subjects = [];
+  //   for (let key of allSubjects) {
+  //     if(!isForReference) {
+  //       if (
+  //         (key.authorId === userID ||
+  //           key.members.some((member) => member.value === user.email) ||
+  //           key.isForAll) &&
+  //         (key.isStarted  || isForReference)
+  //       ) {
+  //         subjects.push(key);
+  //       }
+  //     } else {
+  //       if (
+  //         (key.authorId === userID ||
+  //           key.members.some((member) => member.value === user.email))
+  //       ) {
+  //         subjects.push(key);
+  //       }
+  //     }
+  //   } 
+  //   let total = subjects.length;
+  //   return res.status(200).send({ subjects, total });
+  // } 
+
+  else if(user.role==="teacher") {
+    let subjects = await Subject.find({authorId : userID});
+    let total = await Subject.find({authorId : userID}).countDocuments()
+    if(isForReference) {
+      return res.status(200).send({subjects, total})
+    } else {
+      let subjects = allSubjects.filter(subject => {
+        if((subject.authorId===userID || subject.members.some(member => member.label===user.email) || subject.isForAll) && subject.isStarted) {
+          return subject
         }
-      } else {
-        if (
-          (key.authorId === userID ||
-            key.members.some((member) => member.value === user.email))
-        ) {
-          subjects.push(key);
-        }
-      }
-    } 
-    let total = subjects.length;
-    return res.status(200).send({ subjects, total });
-  } else if (user.role === "student") {
+      })
+      const total = subjects.length;
+      return res.status(200).send({subjects, total})
+    }
+  }
+  else if (user.role === "student") {
     let allSubjects = await Subject.find();
     let subjects = [];
     for (let subject of allSubjects) {

@@ -138,13 +138,17 @@ router.post("/", async (req, res) => {
   let questions = shuffleArray(result);
   questions.forEach((question) => shuffleArray(question.options));
   let total = await Question.find({ subjectId: subjectId }).countDocuments();
-  subject.isDifferent = subject?.isDifferent === "true" ? true : false;
-  if (!subject?.isDifferent) {
+  // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
+  if (!subject.isDifferent) {
+    let questionsLimit = []
     let temp = [...result].reverse();
     if (req.query?.forReference) {
       return res.status(200).send({ total, questions: temp });
     }
-    res.status(200).send({ total, questions });
+    for(let i = 0; i < subject.quizCount; i++) {
+    questionsLimit.push(questions[i])
+    }
+    res.status(200).send({ total, questions : questionsLimit });
   } else {
     if(subject?.quizCount > questions.length) {
       return res.status(200).send(questions)

@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const checkAuth = require("../middleware/auth");
 const Joi = require("joi");
 const { User } = require("./users");
-const Question = require("./questions").Question;
+const {Question} = require("./questions");
 const SALT_ROUNDS = 10;
 const bcryptjs = require("bcryptjs")
 

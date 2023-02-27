@@ -5,6 +5,8 @@ const checkAuth = require("../middleware/auth");
 const e = require("express");
 const { query } = require("express");
 const { json } = require("body-parser");
+const { User } = require("./users");
+const { Result } = require("./results");
 let timeStamp = new Date().getTime();
 router.use(json(query));
 function shuffleArray(array) {
@@ -185,6 +187,7 @@ router.post("/add", checkAuth, async (req, res) => {
 
 //mark tests
 router.post("/check", checkAuth, async (req, res) => {
+  const user = await User.findById(req.user.userID)
   let answers = req.body.questions;
   let point = req.body.point;
   let temp = [];
@@ -197,29 +200,26 @@ router.post("/check", checkAuth, async (req, res) => {
     // return res.status(400).send({ message: "Ba'zi savollar yo'q bo'lganligi uchun tekshirilmadi!" });
     answers = temp
   }
-  // answers.forEach((answer) => {
-  //   if (!answer) {
-  //     return res.status(400).send({ message: "Savollar aniqlanmadi" });
-  //   }
-  // });
   for (const answer of answers) {
     let largestLastSelectNumber = -Infinity;
-    let largestOptionIndex = -1;
+    let largestOptionIndex = 0;
     for (let i = 0; i < answer?.options?.length; i++) {
       let option = answer.options[i];
-      option.lastSelectNumber = option.lastSelectNumber || 0;
+      option.lastSelectNumber = option.lastSelectNumber || 1;
       if (option?.lastSelectNumber > largestLastSelectNumber) {
         largestLastSelectNumber = option.lastSelectNumber;
         largestOptionIndex = i;
       }
     }
-    answer.options[largestOptionIndex]["isSelected"] = true;
+    
+    answer.isChecked ? answer.options[largestOptionIndex]["isSelected"] = true : answer.options[largestOptionIndex]["isSelected"] = false
   }
   answers.forEach((answer) => {
     answer.options.forEach((option) => {
-      if (option.isSelected && option.isTrue)
-        return (answer["isCorrectSelected"] = true);
-    });
+      if (option.isSelected && option.isTrue){return answer["isCorrectSelected"] = true}
+         
+    })
+    console.log(answer)
   });
   let isPassed = false;
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
@@ -231,6 +231,29 @@ router.post("/check", checkAuth, async (req, res) => {
       notCheckedQuestionsCount: sumNotCheckedQuestions(answers),
     });
   } else {
+    let resultTest = {
+      subjectPoint : point,
+      testerId : req.user.userID,
+      status : isPassed ? 'Passed' : "Failed",
+      workingDurationTime : req.body.workingDurationTime,
+      fullName : user.firstName + " " + user.lastName,
+      subjectId : req.body.subject?._id,
+      subjectName : req.body.subject?.name,
+      subjectPoint : req.body.subject.point,
+      workingTime : new Date().getTime(),
+      subjectQuizTime : req.body.subject.time,
+      countCorrectAnswers : sumCorrectAnswers(answers),
+      countIncorrectAnswers : sumIncorrectAnswers(answers),
+      countNotSelectedAnswers : req.body.subject.quizCount - sumCorrectAnswers(answers) - sumIncorrectAnswers(answers),
+      correctAnswers : answers.filter(answer => answer.isCorrectSelected),
+      incorrectAnswers : answers.filter(answer => !answer.isCorrectSelected && answer.isChecked),
+      ball : summBall(answers),
+      percentageResult :  (100 * summBall(answers) )/ point,
+      questionsCount :  req.body.subject.quizCount,
+      notSelectedAnswers : answers.filter(answer => !answer.isChecked)
+    }
+    let result = await  Result(resultTest);
+    let savedResult = await result.save()
     return res
       .status(200)
       .send({ answers, sum: summBall(answers), isPassed, point });

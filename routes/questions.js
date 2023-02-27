@@ -194,7 +194,8 @@ router.post("/check", checkAuth, async (req, res) => {
     }
   });
   if (temp.length != answers.length) {
-    return res.status(400).send({ message: "Ba'zi savollar yo'q bo'lganligi uchun tekshirilmadi!" });
+    // return res.status(400).send({ message: "Ba'zi savollar yo'q bo'lganligi uchun tekshirilmadi!" });
+    answers = temp
   }
   // answers.forEach((answer) => {
   //   if (!answer) {

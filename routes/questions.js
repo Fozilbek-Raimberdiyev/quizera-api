@@ -187,7 +187,7 @@ router.post("/add", checkAuth, async (req, res) => {
 
 //mark tests
 router.post("/check", checkAuth, async (req, res) => {
-  const user = await User.findById(req.user.userID)
+  const user = await User.findById(req.user.userID);
   let answers = req.body.questions;
   let point = req.body.point;
   let temp = [];
@@ -198,7 +198,7 @@ router.post("/check", checkAuth, async (req, res) => {
   });
   if (temp.length != answers.length) {
     // return res.status(400).send({ message: "Ba'zi savollar yo'q bo'lganligi uchun tekshirilmadi!" });
-    answers = temp
+    answers = temp;
   }
   for (const answer of answers) {
     let largestLastSelectNumber = -Infinity;
@@ -211,35 +211,28 @@ router.post("/check", checkAuth, async (req, res) => {
         largestOptionIndex = i;
       }
     }
-    
-    answer.isChecked ? answer.options[largestOptionIndex]["isSelected"] = true : answer.options[largestOptionIndex]["isSelected"] = false
+
+    answer.isChecked
+      ? (answer.options[largestOptionIndex]["isSelected"] = true)
+      : (answer.options[largestOptionIndex]["isSelected"] = false);
   }
   answers.forEach((answer) => {
     answer.options.forEach((option) => {
-      if (option.isSelected && option.isTrue){return answer["isCorrectSelected"] = true}
-         
-    })
-    console.log(answer)
+      if (option.isSelected && option.isTrue) {
+        return (answer["isCorrectSelected"] = true);
+      }
+    });
   });
   let isPassed = false;
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
   if (!point) {
-    return res.status(200).send({
-      answers,
-      correctAnswersCount: sumCorrectAnswers(answers),
-      inCorrectAnswersCount: sumIncorrectAnswers(answers),
-      notCheckedQuestionsCount: sumNotCheckedQuestions(answers),
-    });
-  } else {
     let resultTest = {
-      subjectPoint : point,
       testerId : req.user.userID,
-      status : isPassed ? 'Passed' : "Failed",
+      status : sumCorrectAnswers(answers) >= req.body.subject.quizCount * 60 /100  ? 'Passed' : "Failed",
       workingDurationTime : req.body.workingDurationTime,
       fullName : user.firstName + " " + user.lastName,
       subjectId : req.body.subject?._id,
       subjectName : req.body.subject?.name,
-      subjectPoint : req.body.subject.point,
       workingTime : new Date().getTime(),
       subjectQuizTime : req.body.subject.time,
       countCorrectAnswers : sumCorrectAnswers(answers),
@@ -248,12 +241,49 @@ router.post("/check", checkAuth, async (req, res) => {
       correctAnswers : answers.filter(answer => answer.isCorrectSelected),
       incorrectAnswers : answers.filter(answer => !answer.isCorrectSelected && answer.isChecked),
       ball : summBall(answers),
-      percentageResult :  (100 * summBall(answers) )/ point,
       questionsCount :  req.body.subject.quizCount,
-      notSelectedAnswers : answers.filter(answer => !answer.isChecked)
+      notSelectedAnswers : answers.filter(answer => !answer.isChecked),
+        percentageResult :  (100 * sumCorrectAnswers(answers) )/ req.body.subject.quizCount,
+
     }
     let result = await  Result(resultTest);
     let savedResult = await result.save()
+
+    return res.status(200).send({
+      answers,
+      correctAnswersCount: sumCorrectAnswers(answers),
+      inCorrectAnswersCount: sumIncorrectAnswers(answers),
+      notCheckedQuestionsCount: sumNotCheckedQuestions(answers),
+    });
+  } else {
+    let resultTest = {
+      subjectPoint: point,
+      testerId: req.user.userID,
+      status: isPassed ? "Passed" : "Failed",
+      workingDurationTime: req.body.workingDurationTime,
+      fullName: user.firstName + " " + user.lastName,
+      subjectId: req.body.subject?._id,
+      subjectName: req.body.subject?.name,
+      subjectPoint: req.body.subject.point,
+      workingTime: new Date().getTime(),
+      subjectQuizTime: req.body.subject.time,
+      countCorrectAnswers: sumCorrectAnswers(answers),
+      countIncorrectAnswers: sumIncorrectAnswers(answers),
+      countNotSelectedAnswers:
+        req.body.subject.quizCount -
+        sumCorrectAnswers(answers) -
+        sumIncorrectAnswers(answers),
+      correctAnswers: answers.filter((answer) => answer.isCorrectSelected),
+      incorrectAnswers: answers.filter(
+        (answer) => !answer.isCorrectSelected && answer.isChecked
+      ),
+      ball: summBall(answers),
+      percentageResult: (100 * summBall(answers)) / point,
+      questionsCount: req.body.subject.quizCount,
+      notSelectedAnswers: answers.filter((answer) => !answer.isChecked),
+    };
+    let result = await Result(resultTest);
+    let savedResult = await result.save();
     return res
       .status(200)
       .send({ answers, sum: summBall(answers), isPassed, point });

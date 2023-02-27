@@ -66,6 +66,7 @@ subjectSchema.pre('save', function(next) {
 });
 
 
+
 const Subject = mongoose.model("subjects", subjectSchema);
 
 //defining routes
@@ -181,7 +182,8 @@ router.get("/:id", async (req, res) => {
     }).countDocuments();
     subject.grades[i].countQuestions = count ? count : 0;
   }
-  res.status(200).send(subject);
+  subject.password = undefined
+ return res.status(200).send(subject);
 });
 
 //edit subject route
@@ -192,20 +194,25 @@ router.put("/update", checkAuth, async (req, res) => {
       message: error.details[0].message,
     });
   }
-  Subject.findByIdAndUpdate(
-    req.query.ID,
-    req.body,
-    { new: true },
-    (err, data) => {
-      if (err) {
-        return res.status(500).json({ message: "Error finding subject" });
+  bcryptjs.hash(value.password, SALT_ROUNDS, (err, hashedPassword) => {
+    if(err && value.isHasPassword) return res.status(400).send({message : "Parolni saqlashda xatolik!"})
+    value.password = hashedPassword;
+    Subject.findByIdAndUpdate(
+      req.query.ID,
+      value,
+      { new: true },
+      (err, data) => {
+        if (err) {
+          return res.status(500).json({ message: "Error finding subject" });
+        }
+        if (!data) {
+          return res.status(404).json({ message: "Subject not found" });
+        }
+        return res.json({ message: "Subject succesfully updated" });
       }
-      if (!data) {
-        return res.status(404).json({ message: "Subject not found" });
-      }
-      return res.json({ message: "Subject succesfully updated" });
-    }
-  );
+    );
+  })
+  
 });
 
 //update status subject

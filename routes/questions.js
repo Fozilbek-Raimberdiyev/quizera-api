@@ -119,12 +119,12 @@ const Question = mongoose.model("questions", questionSchema);
 router.post("/", async (req, res) => {
   let { subjectId, limit, page } = req.query;
   let subject = req.body;
-  if(Object.keys(req.body).length===0 && limit==="0" && page==="0") {
-    try{
-      let questions = await Question.find({subjectId : subjectId});
-    return res.status(200).send(questions);
-    } catch(e) {
-      res.status(400).send({message : e})
+  if (Object.keys(req.body).length === 0 && limit === "0" && page === "0") {
+    try {
+      let questions = await Question.find({ subjectId: subjectId });
+      return res.status(200).send(questions);
+    } catch (e) {
+      return res.status(400).send({ message: e });
     }
   }
   if (subject?.grades) {
@@ -140,18 +140,18 @@ router.post("/", async (req, res) => {
   let total = await Question.find({ subjectId: subjectId }).countDocuments();
   // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
   if (!subject.isDifferent) {
-    let questionsLimit = []
+    let questionsLimit = [];
     let temp = [...result].reverse();
     if (req.query?.forReference) {
-      return res.status(200).send({ total, questions: temp });
+      return res.status(200).send({ total, questions: result });
     }
-    for(let i = 0; i < subject.quizCount; i++) {
-    questionsLimit.push(questions[i])
+    for (let i = 0; i < subject.quizCount; i++) {
+      questionsLimit.push(questions[i]);
     }
-    res.status(200).send({ total, questions : questionsLimit });
+    return res.status(200).send({ total, questions: questionsLimit });
   } else {
-    if(subject?.quizCount > questions.length) {
-      return res.status(200).send(questions)
+    if (subject?.quizCount > questions.length) {
+      return res.status(200).send(questions);
     }
     function generateNewMass(mass) {
       let newMass = [];
@@ -165,7 +165,7 @@ router.post("/", async (req, res) => {
       return newMass;
     }
     newQuestions = generateNewMass(subject.grades);
-    res.status(200).send({ questions: newQuestions });
+    return res.status(200).send({ questions: newQuestions });
   }
 });
 
@@ -180,22 +180,31 @@ router.post("/add", checkAuth, async (req, res) => {
   }
   const newQuestion = new Question(value);
   const savedQuestion = await newQuestion.save();
-  res.status(201).send(savedQuestion);
+  return res.status(201).send(savedQuestion);
 });
 
 //mark tests
 router.post("/check", checkAuth, async (req, res) => {
   let answers = req.body.questions;
   let point = req.body.point;
+  let temp = [];
   answers.forEach((answer) => {
-    if (!answer?.options) {
-      res.status(400).send({ message: "Savollar aniqlanmadi" });
+    if (answer.options && answer.question) {
+      temp.push(answer);
     }
   });
+  if (temp.length != answers.length) {
+    return res.status(400).send({ message: "Ba'zi savollar yo'q bo'lganligi uchun tekshirilmadi!" });
+  }
+  // answers.forEach((answer) => {
+  //   if (!answer) {
+  //     return res.status(400).send({ message: "Savollar aniqlanmadi" });
+  //   }
+  // });
   for (const answer of answers) {
     let largestLastSelectNumber = -Infinity;
     let largestOptionIndex = -1;
-    for (let i = 0; i < answer?.options.length; i++) {
+    for (let i = 0; i < answer?.options?.length; i++) {
       let option = answer.options[i];
       option.lastSelectNumber = option.lastSelectNumber || 0;
       if (option?.lastSelectNumber > largestLastSelectNumber) {
@@ -214,14 +223,16 @@ router.post("/check", checkAuth, async (req, res) => {
   let isPassed = false;
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
   if (!point) {
-    res.status(200).send({
+    return res.status(200).send({
       answers,
       correctAnswersCount: sumCorrectAnswers(answers),
       inCorrectAnswersCount: sumIncorrectAnswers(answers),
       notCheckedQuestionsCount: sumNotCheckedQuestions(answers),
     });
   } else {
-    res.status(200).send({ answers, sum: summBall(answers), isPassed, point });
+    return res
+      .status(200)
+      .send({ answers, sum: summBall(answers), isPassed, point });
   }
 });
 
@@ -231,7 +242,7 @@ router.get("/:id", async (req, res) => {
     return res.status(400).send({ message: "Savol identifikatori topilmadi!" });
   let question = await Question.findById(id);
   if (!question) return res.status(404).send({ message: "Savol topilmadi!" });
-  res.status(200).send({ question });
+  return res.status(200).send({ question });
 });
 
 //delete question

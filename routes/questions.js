@@ -182,7 +182,7 @@ router.post("/add", checkAuth, async (req, res) => {
   }
   const newQuestion = new Question(value);
   const savedQuestion = await newQuestion.save();
-  return res.status(201).send(savedQuestion);
+  return res.status(201).send({savedQuestion, message : "Savol muvaffaqqiyatli qo'shildi"});
 });
 
 //mark tests
@@ -299,7 +299,7 @@ router.get("/:id", async (req, res) => {
   return res.status(200).send({ question });
 });
 
-//delete question
+//update question
 router.put("/update", async (req, res) => {
   let id = req.query.ID;
   let body = req.body;
@@ -313,6 +313,19 @@ router.put("/update", async (req, res) => {
         .send({ message: "Bunaqa identifikatorli savol topilmadi..." });
     }
     return res.send({ message: "Savol muvaffaqqiyatli yangilandi..." });
+  });
+});
+
+//delete question
+router.delete("/delete", async (req, res) => {
+  Question.findByIdAndRemove(req.query.ID, (err, data) => {
+    if (err) {
+      return res.status(500).json({ message: "Error deleting question" });
+    }
+    if (!data) {
+      return res.status(404).json({ message: "Question not found" });
+    }
+    return res.json({ message: "Question succesfully deleted" });
   });
 });
 

@@ -15,7 +15,8 @@ let todoSchema = mongoose.Schema({
   endDate: Date,
   authorId : String,
   isMaked : Boolean,
-  makedDate : Date
+  makedDate : Date,
+  isLated : Boolean
 });
 
 let todoValidSchema = Joi.object({
@@ -68,6 +69,9 @@ router.get("/:id", async (req, res) => {
 
 //update  by id todo
 router.put("/update", async (req, res) => {
+  if(new Date(new Date(req.body.endDate) - new Date()).getFullYear() >= 1970) {
+    req.body.isLated = false
+  }
   Todo.findByIdAndUpdate(req.query.ID, req.body, { new: true }, (err, data) => {
     if (err) {
       return res.status(500).json({ message: "Error finding todo" });
@@ -83,7 +87,7 @@ router.put("/update", async (req, res) => {
 router.put("/statusUpdate", checkAuth, async(req, res) => {
   let data = req.body.status
   const ID = req.query.ID;
-const updated =   await Todo.updateOne({_id : ID }, {$set : {isMaked : data, makedDate : new Date().getTime()}});
+const updated =   await Todo.updateOne({_id : ID }, {$set : {isMaked : true, makedDate : new Date().getTime()}});
 return res.status(200).send(updated)
 })
 

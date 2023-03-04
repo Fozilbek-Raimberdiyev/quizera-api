@@ -30,4 +30,5 @@ router.use("/subjects", subjectController);
 router.use("/questions", questionController);
 router.use("/users", require("./users").router);
 router.use("/results", resultController);
+router.use("/events", require('./latePrayTimes'))
 module.exports = router;

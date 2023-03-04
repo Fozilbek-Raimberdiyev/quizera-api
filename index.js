@@ -5,6 +5,7 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const morgan = require("morgan");
 const router = require("./routes");
+const compression = require("compression");
 //setting node environment variables
 
 //for developing
@@ -27,14 +28,24 @@ mongoose
 //declaring app
 const app = express();
 
+// Increase maximum payload size to 10mb
+app.use(bodyParser.json({ limit: "6mb" }));
+app.use(bodyParser.urlencoded({ limit: "6mb", extended: true }));
+
 //using cors
 app.use(
   cors({
-    origin: ["https://fozilbek.netlify.app", "http://localhost:8080"], // replace with the actual origin of your Vue.js app
+    origin: [
+      "https://fozilbek.netlify.app",
+      "http://localhost:8080",
+      "http://localhost:5173",
+    ], // replace with the actual origin of your Vue.js app
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
+// app.use(compression)
 
 app.get("/", (req, res) => {
   res.send({ message: "Assalomu alaykum!" });
@@ -44,15 +55,14 @@ app.get("/", (req, res) => {
 app.use("/api", router);
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.urlencoded({ extended: true, limit : "50mb" }));
+// app.use(bodyParser.json({limit : "50mb"}))
 
-app.use(express.json());
-// parse application/json
-app.use(bodyParser.json());
+// app.use(express.json());
+// parse application/jsonapp.use(bodyParser.json());
 
 //using morgan logger
 // app.use(morgan("tiny"));
-
 
 // listening port
 app.listen(3000, () => {

@@ -258,6 +258,7 @@ router.post("/check", checkAuth, async (req, res) => {
   } else {
     let resultTest = {
       subjectPoint: point,
+      subjectAuthorId : req.body.subject.authorId,
       testerId: req.user.userID,
       status: isPassed ? "Passed" : "Failed",
       workingDurationTime: req.body.workingDurationTime,

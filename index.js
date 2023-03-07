@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const morgan = require("morgan");
 const router = require("./routes");
 const compression = require("compression");
+const fs = require("fs")
 //setting node environment variables
 
 //for developing
@@ -53,16 +54,15 @@ app.get("/", (req, res) => {
 
 app.get("/uploads/:filename", (req, res) => {
   let fileName = req.params.filename;
-  let file = fs.readFile(
-    `${__dirname}/uploads/${fileName}`,
-    "utf-8",
-    (e, file) => {
-      if (e) throw e;
-      return res.send(file);
-      // console.log(file)
+  let file = fs.readFile(`${__dirname}/uploads/${fileName}`, 'utf-8', function (err, data) {
+    if (err) {
+      console.error(err);
+      return;
     }
-  );
-  return res.send(file);
+    return res.send(data)
+    // Do something with the file data
+  });
+  // return res.send(file);
   // console.log(file)
 });
 

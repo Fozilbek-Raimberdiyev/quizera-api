@@ -51,6 +51,21 @@ app.get("/", (req, res) => {
   res.send({ message: "Assalomu alaykum!" });
 });
 
+app.get("/uploads/:filename", (req, res) => {
+  let fileName = req.params.filename;
+  let file = fs.readFile(
+    `${__dirname}/uploads/${fileName}`,
+    "utf-8",
+    (e, file) => {
+      if (e) throw e;
+      return res.send(file);
+      // console.log(file)
+    }
+  );
+  return res.send(file);
+  // console.log(file)
+});
+
 //initial route
 app.use("/api", router);
 

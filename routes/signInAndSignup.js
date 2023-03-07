@@ -4,6 +4,19 @@ const bcryptjs = require("bcryptjs");
 const router = Router();
 const jwt = require("jsonwebtoken");
 const checkAuth = require("../middleware/auth");
+const multer =require("multer")
+const storage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    callback(null, "./uploads/");
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.originalname);
+  },
+});
+const upload = multer({
+  storage: storage,
+});
+
 
 router.post("/login", async (req, res) => {
   let { email, password } = req.body;
@@ -117,8 +130,11 @@ router.get("/user", checkAuth, async (req, res) => {
 });
 
 //update user
-router.put("/updateUser", checkAuth, async(req, res) => {
-  let user = req.body;
+router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
+  let path = {
+    pathImage : req.file.path
+  }
+  let user = {...req.body,...path}
   const updated = await User.updateOne(
     { _id: user._id },
     { $set: user }

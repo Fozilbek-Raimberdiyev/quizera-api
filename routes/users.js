@@ -23,7 +23,8 @@ const userSchema = mongoose.Schema({
   dataRegister : {
     type : Number,
     default : new Date().getTime()
-  }
+  },
+  pathImage : String
 });
 
 //user validate schema

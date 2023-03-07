@@ -85,7 +85,7 @@ router.put("/update", async (req, res) => {
 
 //update status todo
 router.put("/statusUpdate", checkAuth, async(req, res) => {
-  let data = req.body.status
+  let data = req.body.status;
   const ID = req.query.ID;
 const updated =   await Todo.updateOne({_id : ID }, {$set : {isMaked : true, makedDate : new Date().getTime()}});
 return res.status(200).send(updated)

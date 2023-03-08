@@ -7,7 +7,7 @@ const checkAuth = require("../middleware/auth");
 const multer =require("multer")
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, "./uploads/");
+    callback(null, "public/uploads/");
   },
   filename: function (req, file, callback) {
     callback(null, file.originalname);
@@ -132,7 +132,7 @@ router.get("/user", checkAuth, async (req, res) => {
 //update user
 router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
   let path = {
-    pathImage : process.env.PORT +  req.file.path
+    pathImage : process.env.PORT  +  req.file.path
   }
   let user = {...req.body,...path};
   console.log(user)

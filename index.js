@@ -12,6 +12,7 @@ const fs = require("fs")
 //for developing
 // dotenv.config({path : ".env"})
 
+
 //for production and need to be this uncomment while deploying to production
 dotenv.config({ path: ".env.production" });
 
@@ -28,6 +29,10 @@ mongoose
 
 //declaring app
 const app = express();
+
+
+//configuring static files
+app.use(express.static("public"))
 
 // Increase maximum payload size to 10mb
 app.use(bodyParser.json({ limit: "6mb" }));
@@ -52,9 +57,9 @@ app.get("/", (req, res) => {
   res.send({ message: "Assalomu alaykum!" });
 });
 
-app.get("/uploads/:filename", (req, res) => {
+app.get("/public/uploads/:filename", (req, res) => {
   let fileName = req.params.filename;
-  let file = fs.readFile(`${__dirname}/uploads/${fileName}`, 'utf-8', function (err, data) {
+  let file = fs.readFile(`${__dirname}/public/uploads/${fileName}`, 'utf-8', function (err, data) {
     if (err) {
       console.error(err);
       return;

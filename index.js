@@ -80,6 +80,8 @@ app.get("/public/uploads/:filename", (req, res) => {
       res.type("jpg")
     } else if(req.params.filename.includes(".jpeg")) {
       res.type("jpeg")
+    } else {
+      return res.status(400).send({message : "Fayl ko'rsatilgan tipda emas!"})
     }
     return res.sendFile(`${__dirname}/public/uploads/${fileName}`)
     // return res.send(data)

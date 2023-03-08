@@ -74,7 +74,13 @@ app.get("/public/uploads/:filename", (req, res) => {
       console.error(err);
       return;
     }
-    res.type(["png", "jpg", "jpeg"]);
+    if(req.params.filename.includes(".png")) {
+      res.type("png")
+    } else if(req.params.filename.includes(".jpg")) {
+      res.type("jpg")
+    } else if(req.params.filename.includes(".jpeg")) {
+      res.type("jpeg")
+    }
     return res.sendFile(`${__dirname}/public/uploads/${fileName}`)
     // return res.send(data)
     // Do something with the file data

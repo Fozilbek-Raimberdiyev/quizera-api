@@ -7,7 +7,17 @@ const morgan = require("morgan");
 const router = require("./routes");
 const compression = require("compression");
 const fs = require("fs")
+const mime = require("mime")
 //setting node environment variables
+
+
+// Set up MIME types
+mime.define({
+  'text/css': ['css'],
+  'image/png': ['png'],
+  'image/jpeg': ['jpg', 'jpeg'],
+  'application/pdf': ['pdf'],
+}, {force : true});
 
 //for developing
 // dotenv.config({path : ".env"})
@@ -64,7 +74,9 @@ app.get("/public/uploads/:filename", (req, res) => {
       console.error(err);
       return;
     }
-    return res.send(data)
+    res.type('png');
+    return res.sendFile(`${__dirname}/public/uploads/${fileName}`)
+    // return res.send(data)
     // Do something with the file data
   });
   // return res.send(file);

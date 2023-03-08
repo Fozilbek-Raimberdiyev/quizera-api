@@ -135,12 +135,11 @@ router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
     pathImage : process.env.PORT  +  req.file.path
   }
   let user = {...req.body,...path};
-  console.log(user)
   const updated = await User.updateOne(
     { _id: user._id },
     { $set: user }
   );
-  return res.status(200).send({message : "Muvaffaqqiyatli", updated})
+  return res.status(200).send({message : "Muvaffaqqiyatli", updated, user})
 })
 
 //delete user

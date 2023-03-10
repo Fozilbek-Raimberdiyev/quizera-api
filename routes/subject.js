@@ -92,32 +92,6 @@ router.get("/", checkAuth, async (req, res) => {
     let total = await Subject.countDocuments();
     return res.status(200).send({ subjects, total });
   } 
-  // else if (user.role === "teacher") {
-  //   let allSubjects = await Subject.find();
-  //   let subjects = [];
-  //   for (let key of allSubjects) {
-  //     if(!isForReference) {
-  //       if (
-  //         (key.authorId === userID ||
-  //           key.members.some((member) => member.value === user.email) ||
-  //           key.isForAll) &&
-  //         (key.isStarted  || isForReference)
-  //       ) {
-  //         subjects.push(key);
-  //       }
-  //     } else {
-  //       if (
-  //         (key.authorId === userID ||
-  //           key.members.some((member) => member.value === user.email))
-  //       ) {
-  //         subjects.push(key);
-  //       }
-  //     }
-  //   } 
-  //   let total = subjects.length;
-  //   return res.status(200).send({ subjects, total });
-  // } 
-
   else if(user.role==="teacher") {
     let subjects = await Subject.find({authorId : userID});
     let total = await Subject.find({authorId : userID}).countDocuments()

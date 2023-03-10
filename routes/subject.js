@@ -33,7 +33,8 @@ const subjectSchema = new mongoose.Schema({
     default: false,
   },
   password : String,
-  isHasPassword : Boolean
+  isHasPassword : Boolean,
+  authorPathImage : String
 });
 
 const subjectValSchema = Joi.object({
@@ -45,6 +46,7 @@ const subjectValSchema = Joi.object({
   point: Joi.number(),
   members: Joi.array().required(),
   authorId: Joi.string().required(),
+  authorPathImage : Joi.string(),
   authorFullName: Joi.string(),
   createdDate: Joi.number(),
   isForAll: Joi.boolean(),
@@ -158,6 +160,7 @@ router.post("/add", checkAuth, async (req, res) => {
   }
   const user = await User.findById(req.user.userID);
   req.body["authorFullName"] = user.firstName + " " + user.lastName;
+  req.body["authorPathImage"] = user.pathImage;
   let newSubject = await Subject(req.body);
   let savedSubject = await newSubject.save();
   savedSubject.password = undefined

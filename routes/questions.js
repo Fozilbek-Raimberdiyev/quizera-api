@@ -227,7 +227,8 @@ router.post("/check", checkAuth, async (req, res) => {
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
   if (!point) {
     let resultTest = {
-      testerId : req.user.userID,
+      testerId : user.userID,
+      testerImagePath : req.user.pathImage,
       status : sumCorrectAnswers(answers) >= req.body.subject.quizCount * 60 /100  ? 'Passed' : "Failed",
       workingDurationTime : req.body.workingDurationTime,
       fullName : user.firstName + " " + user.lastName,
@@ -260,6 +261,7 @@ router.post("/check", checkAuth, async (req, res) => {
       subjectPoint: point,
       subjectAuthorId : req.body.subject.authorId,
       testerId: req.user.userID,
+      testerImagePath : user.pathImage,
       status: isPassed ? "Passed" : "Failed",
       workingDurationTime: req.body.workingDurationTime,
       fullName: user.firstName + " " + user.lastName,

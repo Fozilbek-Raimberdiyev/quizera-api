@@ -3,25 +3,29 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const morgan = require("morgan");
 const router = require("./routes");
-const compression = require("compression");
-const fs = require("fs")
-const mime = require("mime")
+const fs = require("fs");
+const mime = require("mime");
 //setting node environment variables
 
-
 // Set up MIME types
-mime.define({
-  'text/css': ['css'],
-  'image/png': ['png'],
-  'image/jpeg': ['jpg', 'jpeg'],
-  'application/pdf': ['pdf'],
-}, {force : true});
+mime.define(
+  {
+    "text/css": ["css"],
+    "image/png": ["png"],
+    "image/jpeg": ["jpg", "jpeg"],
+    "application/pdf": ["pdf"],
+    "audio/mpeg": ["mp3"],
+    "audio/wav": ["wav"],
+    "audio/ogg": ["ogg"],
+    "audio/midi": ["midi"],
+    "audio/webm": ["webm"],
+  },
+  { force: true }
+);
 
 //for developing
 // dotenv.config({path : ".env"})
-
 
 //for production and need to be this uncomment while deploying to production
 dotenv.config({ path: ".env.production" });
@@ -40,9 +44,8 @@ mongoose
 //declaring app
 const app = express();
 
-
 //configuring static files
-app.use(express.static("public"))
+app.use(express.static("public"));
 
 // Increase maximum payload size to 10mb
 app.use(bodyParser.json({ limit: "6mb" }));
@@ -69,26 +72,61 @@ app.get("/", (req, res) => {
 
 app.get("/public/uploads/:filename", (req, res) => {
   let fileName = req.params.filename;
-  let file = fs.readFile(`${__dirname}/public/uploads/${fileName}`, 'utf-8', function (err, data) {
-    if (err) {
-      console.error(err);
-      return;
+  let file = fs.readFile(
+    `${__dirname}/public/uploads/${fileName}`,
+    "utf-8",
+    function (err, data) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      if (req.params.filename.includes(".png")) {
+        res.type("png");
+      } else if (req.params.filename.includes(".jpg")) {
+        res.type("jpg");
+      } else if (req.params.filename.includes(".jpeg")) {
+        res.type("jpeg");
+      } else {
+        return res
+          .status(400)
+          .send({ message: "Fayl ko'rsatilgan tipda emas!" });
+      }
+      // return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
+      return res.download(`${__dirname}/public/uploads/${fileName}`);
     }
-    if(req.params.filename.includes(".png")) {
-      res.type("png")
-    } else if(req.params.filename.includes(".jpg")) {
-      res.type("jpg")
-    } else if(req.params.filename.includes(".jpeg")) {
-      res.type("jpeg")
-    } else {
-      return res.status(400).send({message : "Fayl ko'rsatilgan tipda emas!"})
+  );
+});
+
+
+//get listening audio
+app.get("/public/uploads/listening/:filename", (req, res) => {
+  let fileName = req.params.filename;
+  let file = fs.readFile(
+    `${__dirname}/public/uploads/listening/${fileName}`,
+    "utf-8",
+    function (err, data) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+      if (req.params.filename.includes(".mp3")) {
+        res.type("mp3");
+      } else if (req.params.filename.includes(".wav")) {
+        res.type("wav");
+      } else if (req.params.filename.includes(".ogg")) {
+        res.type("ogg");
+      } else if (req.params.filename.includes(".midi ")) {
+        res.type("midi");
+      } else if (req.params.filename.includes(".webm ")) {
+        res.type("webm");
+      } else {
+        return res
+          .status(400)
+          .send({ message: "Fayl ko'rsatilgan tipda emas!" });
+      }
+      return res.sendFile(`${__dirname}/public/uploads/listening/${fileName}`);
     }
-    return res.sendFile(`${__dirname}/public/uploads/${fileName}`)
-    // return res.send(data)
-    // Do something with the file data
-  });
-  // return res.send(file);
-  // console.log(file)
+  );
 });
 
 //initial route

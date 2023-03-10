@@ -56,4 +56,5 @@ router.use("/questions", questionController);
 router.use("/users", require("./users").router);
 router.use("/results", resultController);
 router.use("/events", require("./latePrayTimes"));
+router.use("/listeningQuiz", require("./listeningQuiz"))
 module.exports = router;

@@ -4,6 +4,7 @@ const router = require("express").Router();
 
 const resultSchema = new mongoose.Schema({
   testerId: String,
+  testerImagePath : String,
   workingTime: Date,
   status: String,
   workingDurationTime: Number,

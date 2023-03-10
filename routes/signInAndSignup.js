@@ -38,6 +38,7 @@ router.post("/login", async (req, res) => {
   // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
   let payload = {
     userID: existedUser._id,
+    email : existedUser.email
   };
   const token = jwt.sign(payload, process.env.JSON_SIGNATURE, {
     expiresIn: 60 * 60 * 24,
@@ -81,6 +82,7 @@ router.post("/register", async (req, res) => {
     // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
     let payload = {
       userID: savedUser._id,
+      email: savedUser.email
     };
     const token = jwt.sign(payload, process.env.JSON_SIGNATURE, {
       expiresIn: 60 * 60 * 24,
@@ -131,8 +133,10 @@ router.get("/user", checkAuth, async (req, res) => {
 
 //update user
 router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
-  let user = {...req.body};
+  let user = JSON.parse(req.body.form);
+  console.log(req.file)
   user.pathImage = process.env.HOST + req.file.path;
+  console.log(user)
   const updated = await User.updateOne(
     { _id: user._id },
     { $set: user }
@@ -146,7 +150,8 @@ router.delete("/delete", async (req, res) => {
     if (err) {
       return res.status(500).json({ message: "Error deleting user" });
     }
-    if (!data) {
+    
+if (!data) {
       return res.status(404).json({ message: "User not found" });
     }
     return res.json({ message: "User succesfully deleted" });

@@ -71,29 +71,65 @@ listeningQuizSchema.pre("save", function (next) {
   });
 });
 
-const ListeningQuiz = mongoose.model("listeningquiz", listeningQuizSchema);
+const ListeningQuiz = mongoose.model("listeningquizzes", listeningQuizSchema);
 
 //get list audio quizzes
-router.get("/", async (req, res) => {
+router.get("/", checkAuth, async (req, res) => {
   let pageNumber = req.query.page || 1;
   let pageLimit = req.query.limit || 10;
-  let allQuizzes = await ListeningQuiz.find()
-    .skip((pageNumber - 1) * pageLimit)
-    .limit(pageLimit);
-    let total = await ListeningQuiz.countDocuments()
-  res.status(200).send({
-    quizzes : allQuizzes,
-    total
-  });
-});  
-
+  let isForReference = req.query.isForReference;
+  if (isForReference === true) {
+    try {
+      ListeningQuiz.find({ authorId: req.user.userID })
+        .skip((pageNumber - 1) * pageLimit)
+        .limit(pageLimit)
+        .exec((err, results) => {
+          if (!err) {
+            return res.status(200).send({
+              quizzes: results,
+              total: results.length,
+            });
+          }
+        });
+    } catch (e) {
+      console.log(e);
+    }
+  } else {
+    ListeningQuiz.find({
+      $or: [
+        {
+          members: {
+            $elemMatch: {
+              value: req.user.email,
+            },
+          },
+          isStarted: true,
+        },
+        {
+          authorId: req.user.userID,
+        },
+      ],
+    })
+      .skip((pageNumber - 1) * pageLimit)
+      .limit(pageLimit)
+      .exec(function (err, results) {
+        if (!err) {
+          return res.status(200).send({
+            quizzes: results,
+            total: results.length,
+          });
+        }
+      });
+  }
+});
 
 //add audio
 router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
   const audio = req.file;
   let body = JSON.parse(req.body.form);
-  body["audioPath"] = process.env.HOST + audio.path;
-  console.log(body);
+  if (audio!=null || audio!=undefined) {
+    body["audioPath"] = process.env.HOST + audio.path;
+  }
   const { error, value } = listeningQuizValSchema.validate(body);
   if (error) {
     return res.status(400).send({ message: error.details[0].message });
@@ -107,6 +143,97 @@ router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
       .status(200)
       .send({ message: "Muvaffaqqiyatli", quizs: all, total });
   } catch (e) {}
+});
+
+//get by id
+router.get("/:id", async (req, res) => {
+  let id = req.params.id;
+  if (id === "undefined" || id === "null")
+    return res.status(400).send({ message: "Fan identifikatori topilmadi..." });
+  let quiz = await ListeningQuiz.findById(id);
+  if (!quiz) {
+    return res.status(404).json({ message: "Sinov topilmadi" });
+  }
+  quiz.password = undefined;
+  return res.status(200).send(quiz);
+});
+
+//edit subject route
+router.put("/update", upload.single("audio"), checkAuth, async (req, res) => {
+  let body = JSON.parse(req.body.form);
+  let audio = req.file
+  console.log(body)
+  if (audio!=null || audio!=undefined) {
+    body["audioPath"] = process.env.HOST + audio.path;
+  }
+  const { error, value } = listeningQuizValSchema.validate(body);
+  if (error) {
+    return res.status(400).json({
+      message: error.details[0].message,
+    });
+  }
+  bcryptjs.hash(value.password, SALT_ROUNDS, (err, hashedPassword) => {
+    if (err && value.isHasPassword)
+      return res.status(400).send({ message: "Parolni saqlashda xatolik!" });
+    value.password = hashedPassword;
+    ListeningQuiz.findByIdAndUpdate(
+      req.query.ID,
+      value,
+      { new: true },
+      (err, data) => {
+        if (err) {
+          return res.status(500).json({ message: "Error finding quiz" });
+        }
+        if (!data) {
+          return res.status(404).json({ message: "Quiz not found" });
+        }
+        return res.json({ message: "Quiz succesfully updated" });
+      }
+    );
+  });
+});
+
+//update status subject
+router.put("/statusUpdate", checkAuth, async (req, res) => {
+  const { status, quiz } = req.body;
+  const updated = await ListeningQuiz.updateOne(
+    { _id: quiz },
+    { $set: { isStarted: status } }
+  );
+  const quizzes = await ListeningQuiz.find({ authorId: req.user.userID });
+  return res.status(200).send({ message: "Muvaffaqqiyatli", updated, quizzes });
+});
+
+//delete quiz
+router.delete("/delete", async (req, res) => {
+  let id = req.query.ID;
+  try {
+    ListeningQuiz.findByIdAndRemove(id, (err, data) => {
+      if (err) {
+        return res.status(500).json({ message: "Error deleting quiz" });
+      }
+      if (!data) {
+        return res.status(404).json({ message: "Quiz not found" });
+      }
+      return res.json({
+        message: `Quiz deleted.`,
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Internal server error");
+  }
+});
+
+//check password quiz
+router.post("/checkPassword", checkAuth, async (req, res) => {
+  const { quiz, password } = req.body;
+  const existedQuiz = await ListeningQuiz.findById(quiz._id);
+  let comparedPassword = await bcryptjs.compare(password, existedQuiz.password);
+  if (!comparedPassword) {
+    return res.status(400).send({ message: "Parol xato kiritildi..." });
+  }
+  return res.status(200).send({ isAllowed: true });
 });
 
 module.exports = router;

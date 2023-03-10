@@ -162,7 +162,6 @@ router.get("/:id", async (req, res) => {
 router.put("/update", upload.single("audio"), checkAuth, async (req, res) => {
   let body = JSON.parse(req.body.form);
   let audio = req.file
-  console.log(body)
   if (audio!=null || audio!=undefined) {
     body["audioPath"] = process.env.HOST + audio.path;
   }

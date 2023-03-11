@@ -4,7 +4,7 @@ const router = require("express").Router();
 
 const resultSchema = new mongoose.Schema({
   testerId: String,
-  testerImagePath : String,
+  testerImagePath: String,
   workingTime: Date,
   status: String,
   workingDurationTime: Number,
@@ -30,30 +30,65 @@ const Result = mongoose.model("results", resultSchema);
 
 //get list results
 router.get("/", checkAuth, async (req, res) => {
+  let pageNumber = req.query.page || 1;
+  let pageLimit = req.query.limit || 10;
   let query = req.query.query;
   let userID = req.user.userID;
   if (query === "me") {
     try {
-      let results = await Result.find({ testerId: userID });
-      let total = await Result.find({ testerId: userID }).countDocuments();
-      return res.status(200).send({ results, total });
-    } catch (e) {}
+      Result.find({ testerId: userID })
+        .skip((pageNumber - 1) * pageLimit)
+        .limit(pageLimit)
+        .exec((err, results) => {
+          if (!err) {
+            Result.countDocuments({testerId : userID}, (err,count) => {
+              return res.status(200).send({ results, total : count});
+            })
+            
+          }
+        });
+    } catch (e) {
+      console.log(e)
+    }
+    finally{
+      return 
+    }
   }
   if (query === "mySubjects") {
     try {
-      let results = await Result.find({ subjectAuthorId: userID });
-      let total = await Result.find({
-        subjectAuthorId: userID,
-      }).countDocuments();
-      return res.status(200).send({ results, total });
-    } catch (e) {}
+      Result.find({ subjectAuthorId: userID })
+        .skip((pageNumber - 1) * pageLimit)
+        .limit(pageLimit)
+        .exec((err, results) => {
+          if (!err) {
+            return res.status(200).send({ results, total: results.length });
+          }
+        });
+    } catch (e) {
+      return res.send({message : e.message})
+    }
+    finally {
+      return
+    }
   }
   if (query === "all") {
     try {
-      let results = await Result.find();
-      let total = await Result.find().countDocuments();
-      return res.status(200).send({ results, total });
-    } catch (e) {}
+      Result.find()
+        .skip((pageNumber - 1) * pageLimit)
+        .limit(pageLimit)
+        .exec((err, results) => {
+          if (!err) {
+            Result.countDocuments((e, count) => {
+              return res.status(200).send({ results, total: count });
+            })
+          }
+        });
+    } catch (e) {
+      return res.send({message : e.message})
+    }
+    finally {
+      return
+    }
   }
   return res.status(400).send({ message: "Xatolik yuz berdi!" });
 });

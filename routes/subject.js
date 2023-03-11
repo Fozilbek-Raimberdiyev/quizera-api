@@ -68,7 +68,7 @@ const subjectValSchema = Joi.object({
   isStarted: Joi.boolean().required(),
   password: Joi.string(),
   isHasPassword: Joi.boolean().required(),
-  audioPath : Joi.string()
+  audioPath: Joi.string(),
 });
 
 //setting hash password subject
@@ -88,56 +88,80 @@ const Subject = mongoose.model("subjects", subjectSchema);
 //defining routes
 //getting all subject list
 router.get("/", checkAuth, async (req, res) => {
+  // 2ta asosiy shartga qarab. 1. reference uchun 2. reference uchun emas
+  //2 ta ichki holatga qarab ro'yhat beriladi. 1. admin roli uchun. 2. boshqa rollar uchun
   let userID = req.user.userID;
   let user = await User.findById(userID);
-  let isForReference = null;
-  if (req.query.isForReference === "true") {
-    isForReference = true;
-  } else if (req.query.isForReference === "false") {
-    isForReference = false;
-  }
   let { limit, page } = req.query;
-  let allSubjects = await Subject.find();
-  // let subjectsforAdmin = await Subject.find()
-  //   .skip((page - 1) * limit)
-  //   .limit(limit);
-  if (user.role === "admin") {
-    let subjects = await Subject.find();
-    let total = await Subject.countDocuments();
-    return res.status(200).send({ subjects, total });
-  } else if (user.role === "teacher") {
-    let subjects = await Subject.find({ authorId: userID });
-    let total = await Subject.find({ authorId: userID }).countDocuments();
-    if (isForReference) {
-      return res.status(200).send({ subjects, total });
+  //1-asosiy shart: ro'yhat ma'lumot ustida ishlash uchun so'ralayotgan bo'lsa
+  if (req.query.isForReference === true) {
+    if (user.role === "admin") {
+      Subject.find()
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec((err, results) => {
+          if (!err) {
+            Subject.countDocuments((err, count) => {
+              return res.status(200).send({ subjects: results, total: count });
+            });
+          }
+        });
     } else {
-      let subjects = allSubjects.filter((subject) => {
-        if (
-          (subject.authorId === userID ||
-            subject.members.some((member) => member.label === user.email) ||
-            subject.isForAll) &&
-          subject.isStarted
-        ) {
-          return subject;
-        }
-      });
-      const total = subjects.length;
-      return res.status(200).send({ subjects, total });
+      Subject.find({ authorId: userID })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec((err, results) => {
+          if (!err) {
+            Subject.countDocuments({ authorId: userID }, (err, count) => {
+              return res.status(200).send({ subjects: results, total: count });
+            });
+          }
+        });
     }
-  } else if (user.role === "student") {
-    let allSubjects = await Subject.find();
-    let subjects = [];
-    for (let subject of allSubjects) {
-      if (
-        (subject.members.some((member) => member.value === user.email) ||
-          subject.isForAll) &&
-        subject.isStarted
-      ) {
-        subjects.push(subject);
-      }
+  }
+  // 2-asosiy shart. ro'yhat test yechish uchun so'ralayotgan bo'lsa
+  else {
+    if (user.role === "admin") {
+      Subject.find()
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec((err, results) => {
+          if (!err) {
+            Subject.countDocuments((err, count) => {
+              return res.status(200).send({ subjects: results, total: count });
+            });
+          }
+        });
+    } else {
+      Subject.find({
+        $or: [
+          { authorId: userID },
+          { isStarted: true, members: { $elemMatch: { value: user.email } } },
+        ],
+      })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .exec((err, results) => {
+          if (!err) {
+            Subject.countDocuments(
+              {
+                $or: [
+                  { authorId: userID },
+                  {
+                    isStarted: true,
+                    members: { $elemMatch: { value: user.email } },
+                  },
+                ],
+              },
+              (err, count) => {
+                return res
+                  .status(200)
+                  .send({ subjects: results, total: count });
+              }
+            );
+          }
+        });
     }
-    let total = subjects.length;
-    return res.status(200).send({ subjects, total });
   }
 });
 

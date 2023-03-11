@@ -3,9 +3,23 @@ const mongoose = require("mongoose");
 const checkAuth = require("../middleware/auth");
 const Joi = require("joi");
 const { User } = require("./users");
-const {Question} = require("./questions");
+const { Question } = require("./questions");
 const SALT_ROUNDS = 10;
-const bcryptjs = require("bcryptjs")
+const bcryptjs = require("bcryptjs");
+const multer = require("multer");
+
+//defining storage for files
+const storage = multer.diskStorage({
+  destination: function (req, file, callback) {
+    callback(null, "public/uploads/listening/");
+  },
+  filename: function (req, file, callback) {
+    callback(null, file.originalname);
+  },
+});
+const upload = multer({
+  storage: storage,
+});
 
 //countQuestionDefine
 async function countQuestions(ball) {
@@ -32,9 +46,10 @@ const subjectSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-  password : String,
-  isHasPassword : Boolean,
-  authorPathImage : String
+  password: String,
+  isHasPassword: Boolean,
+  authorPathImage: String,
+  audioPath: String,
 });
 
 const subjectValSchema = Joi.object({
@@ -46,28 +61,27 @@ const subjectValSchema = Joi.object({
   point: Joi.number(),
   members: Joi.array().required(),
   authorId: Joi.string().required(),
-  authorPathImage : Joi.string(),
+  authorPathImage: Joi.string(),
   authorFullName: Joi.string(),
   createdDate: Joi.number(),
   isForAll: Joi.boolean(),
   isStarted: Joi.boolean().required(),
-  password : Joi.string(),
-  isHasPassword : Joi.boolean().required()
+  password: Joi.string(),
+  isHasPassword: Joi.boolean().required(),
+  audioPath : Joi.string()
 });
 
 //setting hash password subject
-subjectSchema.pre('save', function(next) {
+subjectSchema.pre("save", function (next) {
   const subject = this;
-  if (!subject.isModified('password')) return next();
+  if (!subject.isModified("password")) return next();
 
-  bcryptjs.hash(subject.password, SALT_ROUNDS, function(err, hashedPassword) {
+  bcryptjs.hash(subject.password, SALT_ROUNDS, function (err, hashedPassword) {
     if (err) return next(err);
     subject.password = hashedPassword;
     next();
   });
 });
-
-
 
 const Subject = mongoose.model("subjects", subjectSchema);
 
@@ -77,37 +91,40 @@ router.get("/", checkAuth, async (req, res) => {
   let userID = req.user.userID;
   let user = await User.findById(userID);
   let isForReference = null;
-  if(req.query.isForReference==="true") {
-    isForReference = true
-  } else if(req.query.isForReference==="false") {
-    isForReference = false
+  if (req.query.isForReference === "true") {
+    isForReference = true;
+  } else if (req.query.isForReference === "false") {
+    isForReference = false;
   }
   let { limit, page } = req.query;
-  let allSubjects = await Subject.find()
+  let allSubjects = await Subject.find();
   // let subjectsforAdmin = await Subject.find()
   //   .skip((page - 1) * limit)
   //   .limit(limit);
   if (user.role === "admin") {
-    let subjects = await Subject.find()
+    let subjects = await Subject.find();
     let total = await Subject.countDocuments();
     return res.status(200).send({ subjects, total });
-  } 
-  else if(user.role==="teacher") {
-    let subjects = await Subject.find({authorId : userID});
-    let total = await Subject.find({authorId : userID}).countDocuments()
-    if(isForReference) {
-      return res.status(200).send({subjects, total})
+  } else if (user.role === "teacher") {
+    let subjects = await Subject.find({ authorId: userID });
+    let total = await Subject.find({ authorId: userID }).countDocuments();
+    if (isForReference) {
+      return res.status(200).send({ subjects, total });
     } else {
-      let subjects = allSubjects.filter(subject => {
-        if((subject.authorId===userID || subject.members.some(member => member.label===user.email) || subject.isForAll) && subject.isStarted) {
-          return subject
+      let subjects = allSubjects.filter((subject) => {
+        if (
+          (subject.authorId === userID ||
+            subject.members.some((member) => member.label === user.email) ||
+            subject.isForAll) &&
+          subject.isStarted
+        ) {
+          return subject;
         }
-      })
+      });
       const total = subjects.length;
-      return res.status(200).send({subjects, total})
+      return res.status(200).send({ subjects, total });
     }
-  }
-  else if (user.role === "student") {
+  } else if (user.role === "student") {
     let allSubjects = await Subject.find();
     let subjects = [];
     for (let subject of allSubjects) {
@@ -125,19 +142,25 @@ router.get("/", checkAuth, async (req, res) => {
 });
 
 //add subject route
-router.post("/add", checkAuth, async (req, res) => {
-  const { error, value } = subjectValSchema.validate(req.body);
+router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
+  let body = JSON.parse(req.body.form);
+  let audio = req.file;
+
+  const { error, value } = subjectValSchema.validate(body);
   if (error) {
     return res.status(400).json({
       message: error.details[0].message,
     });
   }
+  if (audio != null || audio != undefined) {
+    value["audioPath"] = process.env.HOST + audio.path;
+  }
   const user = await User.findById(req.user.userID);
-  req.body["authorFullName"] = user.firstName + " " + user.lastName;
-  req.body["authorPathImage"] = user.pathImage;
-  let newSubject = await Subject(req.body);
+  value["authorFullName"] = user.firstName + " " + user.lastName;
+  value["authorPathImage"] = user.pathImage;
+  let newSubject = await Subject(value);
   let savedSubject = await newSubject.save();
-  savedSubject.password = undefined
+  savedSubject.password = undefined;
   res
     .status(201)
     .send({ savedSubject, message: "Fan muvaffaqqiyatli qo'shildi" });
@@ -159,8 +182,8 @@ router.get("/:id", async (req, res) => {
     }).countDocuments();
     subject.grades[i].countQuestions = count ? count : 0;
   }
-  subject.password = undefined
- return res.status(200).send(subject);
+  subject.password = undefined;
+  return res.status(200).send(subject);
 });
 
 //edit subject route
@@ -172,7 +195,8 @@ router.put("/update", checkAuth, async (req, res) => {
     });
   }
   bcryptjs.hash(value.password, SALT_ROUNDS, (err, hashedPassword) => {
-    if(err && value.isHasPassword) return res.status(400).send({message : "Parolni saqlashda xatolik!"})
+    if (err && value.isHasPassword)
+      return res.status(400).send({ message: "Parolni saqlashda xatolik!" });
     value.password = hashedPassword;
     Subject.findByIdAndUpdate(
       req.query.ID,
@@ -188,8 +212,7 @@ router.put("/update", checkAuth, async (req, res) => {
         return res.json({ message: "Subject succesfully updated" });
       }
     );
-  })
-  
+  });
 });
 
 //update status subject
@@ -199,8 +222,10 @@ router.put("/statusUpdate", checkAuth, async (req, res) => {
     { _id: subjectID },
     { $set: { isStarted: status } }
   );
-  const subjects = await Subject.find({authorId : req.user.userID})
-  return res.status(200).send({message : "Muvaffaqqiyatli", updated, subjects});
+  const subjects = await Subject.find({ authorId: req.user.userID });
+  return res
+    .status(200)
+    .send({ message: "Muvaffaqqiyatli", updated, subjects });
 });
 
 //delete subject and subject questions
@@ -227,14 +252,17 @@ router.delete("/delete", async (req, res) => {
 });
 
 //check password subject
-router.post("/checkPassword", checkAuth, async(req, res) => {
-  const {subject, password} = req.body;
+router.post("/checkPassword", checkAuth, async (req, res) => {
+  const { subject, password } = req.body;
   const existedSubject = await Subject.findById(subject._id);
-  let comparedPassword = await bcryptjs.compare(password, existedSubject.password);
-  if(!comparedPassword) {
-    return res.status(400).send({message : "Parol xato kiritildi..."})
+  let comparedPassword = await bcryptjs.compare(
+    password,
+    existedSubject.password
+  );
+  if (!comparedPassword) {
+    return res.status(400).send({ message: "Parol xato kiritildi..." });
   }
-  return res.status(200).send({isAllowed: true})
-})
+  return res.status(200).send({ isAllowed: true });
+});
 
 module.exports = { subjectController: router, Subject };

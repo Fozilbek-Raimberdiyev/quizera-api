@@ -108,6 +108,10 @@ router.get("/", checkAuth, async (req, res) => {
         {
           authorId: req.user.userID,
         },
+        {
+          isForAll : true,
+          isStarted : true
+        }
       ],
     })
       .skip((pageNumber - 1) * pageLimit)

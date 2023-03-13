@@ -92,7 +92,7 @@ app.get("/public/uploads/:filename", (req, res) => {
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
       // return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
-      return res.download(`${__dirname}/public/uploads/${fileName}`);
+      return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
     }
   );
 });

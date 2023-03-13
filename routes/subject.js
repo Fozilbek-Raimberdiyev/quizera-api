@@ -92,9 +92,12 @@ router.get("/", checkAuth, async (req, res) => {
   //2 ta ichki holatga qarab ro'yhat beriladi. 1. admin roli uchun. 2. boshqa rollar uchun
   let userID = req.user.userID;
   let user = await User.findById(userID);
-  let { limit, page } = req.query;
+  let { limit, page, isForReference } = req.query;
+  limit = Number(req.query.limit)
+  page = Number(req.query.page)
+  isForReference = Boolean(req.query.isForReference)
   //1-asosiy shart: ro'yhat ma'lumot ustida ishlash uchun so'ralayotgan bo'lsa
-  if (req.query.isForReference === true) {
+  if (req.query.isForReference === true || req.query.isForReference === 'true') {
     if (user.role === "admin") {
       Subject.find()
         .skip((page - 1) * limit)
@@ -102,7 +105,7 @@ router.get("/", checkAuth, async (req, res) => {
         .exec((err, results) => {
           if (!err) {
             Subject.countDocuments((err, count) => {
-              return res.status(200).send({ subjects: results, total: count });
+              return res.status(200).send({ subjects: results, total: count, req : req.query });
             });
           }
         });

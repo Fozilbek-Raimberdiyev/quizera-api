@@ -7,7 +7,7 @@ const checkAuth = require("../middleware/auth");
 const multer =require("multer")
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, `${__dirname}/public/uploads/`);
+    callback(null, `public/uploads/`);
   },
   filename: function (req, file, callback) {
     callback(null, file.originalname);

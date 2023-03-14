@@ -105,7 +105,7 @@ router.get("/", checkAuth, async (req, res) => {
         .exec((err, results) => {
           if (!err) {
             Subject.countDocuments((err, count) => {
-              return res.status(200).send({ subjects: results, total: count, req : req.query });
+              return res.status(200).send({ subjects: results, total: count });
             });
           }
         });

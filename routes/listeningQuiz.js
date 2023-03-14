@@ -7,6 +7,34 @@ const Joi = require("joi");
 const SALT_ROUNDS = 10;
 const bcryptjs = require("bcryptjs");
 
+//function  check quiz
+function checkQuiz(textArray) {
+  for(let element of textArray) {
+    if(!element.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
+      element["isCorrectFilled"] = true
+    } element['isSelected'] = true
+  }
+  return textArray
+}
+
+function getStatistic(textArray) {
+  let stat = {
+    correctWordsCount : 0,
+    inCorrectWordsCount : 0,
+    notFilledWords : 0 
+  }
+for(let element of textArray) {
+  if(element.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
+    stat.correctWordsCount++
+  } else if(element.isSelected && !element.isVisible && element.value.toLocaleLowerCase()!=element.label.toLocaleLowerCase()) {
+    stat.inCorrectWordsCount++
+  } else if(!element.isSelected) {
+    stat.notFilledWords++
+  }
+}
+return stat
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, 'public/uploads/listening/');
@@ -238,5 +266,13 @@ router.post("/checkPassword", checkAuth, async (req, res) => {
   }
   return res.status(200).send({ isAllowed: true });
 });
+
+
+//check quiz results
+router.post("/check", checkAuth, async(req, res) => {
+  let body = req.body;
+let result =   checkQuiz(body);
+return res.status(200).send({result, stat : getStatistic(body)})
+})
 
 module.exports = router;

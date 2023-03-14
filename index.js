@@ -91,9 +91,10 @@ app.get("/public/uploads/:filename", (req, res) => {
           .status(400)
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
+      require("./public/uploads/")
       // return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
-      console.log(`${__dirname}/public/uploads/${fileName}`)
-      return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
+      console.log(`./public/uploads/${fileName}`)
+      return res.sendFile(`./public/uploads/${fileName}`);
     }
   );
 });

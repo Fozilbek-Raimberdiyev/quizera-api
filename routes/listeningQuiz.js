@@ -9,7 +9,7 @@ const bcryptjs = require("bcryptjs");
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, "public/uploads/listening/");
+    callback(null, `${__dirname}/public/uploads/listening/`);
   },
   filename: function (req, file, callback) {
     callback(null, file.originalname);

@@ -92,6 +92,7 @@ app.get("/public/uploads/:filename", (req, res) => {
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
       // return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
+      console.log(`${__dirname}/public/uploads/${fileName}`)
       return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
     }
   );
@@ -124,6 +125,7 @@ app.get("/public/uploads/listening/:filename", (req, res) => {
           .status(400)
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
+      console.log(`${__dirname}/public/uploads/listening/${fileName}`)
       return res.sendFile(`${__dirname}/public/uploads/listening/${fileName}`);
     }
   );

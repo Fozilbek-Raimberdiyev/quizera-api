@@ -258,8 +258,8 @@ router.delete("/delete", async (req, res) => {
 
 //check password quiz
 router.post("/checkPassword", checkAuth, async (req, res) => {
-  const { quiz, password } = req.body;
-  const existedQuiz = await ListeningQuiz.findById(quiz._id);
+  const { quizID, password } = req.body;
+  const existedQuiz = await ListeningQuiz.findById(quizID);
   let comparedPassword = await bcryptjs.compare(password, existedQuiz.password);
   if (!comparedPassword) {
     return res.status(400).send({ message: "Parol xato kiritildi..." });

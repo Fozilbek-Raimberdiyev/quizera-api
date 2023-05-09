@@ -7,7 +7,11 @@ const router = require("./routes");
 const fs = require("fs");
 const mime = require("mime");
 //setting node environment variables
-
+if (process.env.NODE_ENV === "development") {
+  dotenv.config({ path: ".env" });
+} else {
+  dotenv.config({ path: ".env.production" });
+}
 // Set up MIME types
 mime.define(
   {
@@ -24,11 +28,6 @@ mime.define(
   { force: true }
 );
 
-//for developing
-// dotenv.config({path : ".env"})
-
-//for production and need to be this uncomment while deploying to production
-dotenv.config({ path: ".env.production" });
 
 //connecting to database
 mongoose.set("strictQuery", false);
@@ -70,35 +69,26 @@ app.get("/", (req, res) => {
   res.send({ message: "Assalomu alaykum!" });
 });
 
-app.get("/public/uploads/:filename", (req, res) => {
-  let fileName = req.params.filename;
-  let file = fs.readFile(
-    `${__dirname}/public/uploads/${fileName}`,
-    "utf-8",
-    function (err, data) {
-      if (err) {
-        console.error(err);
-        return;
-      }
-      if (req.params.filename.includes(".png")) {
-        res.type("png");
-      } else if (req.params.filename.includes(".jpg")) {
-        res.type("jpg");
-      } else if (req.params.filename.includes(".jpeg")) {
-        res.type("jpeg");
-      } else {
-        return res
-          .status(400)
-          .send({ message: "Fayl ko'rsatilgan tipda emas!" });
-      }
-      require("./public/uploads/")
-      // return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
-      console.log(`./public/uploads/${fileName}`)
-      return res.sendFile(`./public/uploads/${fileName}`);
-    }
-  );
-});
+app.get("/public/uploads/:filename", async(req, res) => {
 
+  let fileName = req.params.filename;
+  fs.access(`${__dirname}/public/uploads/${fileName}`, (err) => {
+    if (err) {
+      console.error(err);
+      return res.status(404).send("Fayl topilmadi");
+    }
+    if (req.params.filename.includes(".png")) {
+      res.type("png");
+    } else if (req.params.filename.includes(".jpg")) {
+      res.type("jpg");
+    } else if (req.params.filename.includes(".jpeg")) {
+      res.type("jpeg");
+    } else {
+      return res.status(400).send({ message: "Fayl ko'rsatilgan tipda emas!" });
+    }
+    return res.sendFile(`${__dirname}/public/uploads/${fileName}`);
+  });
+});
 
 //get listening audio
 app.get("/public/uploads/listening/:filename", (req, res) => {
@@ -126,7 +116,7 @@ app.get("/public/uploads/listening/:filename", (req, res) => {
           .status(400)
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
-      console.log(`${__dirname}/public/uploads/listening/${fileName}`)
+      // console.log(`${__dirname}/public/uploads/listening/${fileName}`)
       return res.sendFile(`${__dirname}/public/uploads/listening/${fileName}`);
     }
   );

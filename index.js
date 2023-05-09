@@ -93,9 +93,8 @@ app.get("/public/uploads/:filename", async(req, res) => {
 //get listening audio
 app.get("/public/uploads/listening/:filename", (req, res) => {
   let fileName = req.params.filename;
-  let file = fs.readFile(
+  let file = fs.access(
     `${__dirname}/public/uploads/listening/${fileName}`,
-    "utf-8",
     function (err, data) {
       if (err) {
         console.error(err);

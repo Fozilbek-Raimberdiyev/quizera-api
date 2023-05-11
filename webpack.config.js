@@ -1,14 +1,24 @@
 const path = require('path');
-const NodePolyfillPlugin = require("node-polyfill-webpack-plugin");
+const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
+  target: 'node',
   mode : "production",
-    entry: './index.js',
-    output: {
-        filename: 'bundle.js',
-        path: path.resolve(__dirname, 'dist'),
-    },
-    plugins: [
-        new NodePolyfillPlugin()
-    ],
-};
+  entry: './index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js'
+  },
+  externals: [nodeExternals()],
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader'
+        }
+      }
+    ]
+  }
+}

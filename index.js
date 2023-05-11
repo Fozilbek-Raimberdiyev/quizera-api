@@ -32,7 +32,7 @@ mime.define(
 //connecting to database
 mongoose.set("strictQuery", false);
 mongoose
-  .connect(process.env.DB_HOST, {})
+  .connect("mongodb+srv://flraimberdiyev:gKNBsYHE1VwWB6es@test.eehlww4.mongodb.net/?retryWrites=true&w=majority", {})
   .then(() => {
     console.log("MongoDB ga ulanish muvaffaqqiyatli amalga oshirildi");
   })

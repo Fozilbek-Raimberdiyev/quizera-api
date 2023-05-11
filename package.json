@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "build": "webpack"
+    "build": "webpack --mode production"
   },
   "engines": {
     "node": ">=14"

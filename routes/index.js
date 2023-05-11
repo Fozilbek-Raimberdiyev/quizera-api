@@ -2,6 +2,7 @@ const { Router } = require("express");
 const { questionController, Question } = require("./questions");
 const { subjectController, Subject } = require("./subject");
 const { Todo } = require("./todos");
+const {User} = require("./users")
 const { resultController } = require("./results");
 const checkAuth = require("../middleware/auth");
 
@@ -14,6 +15,7 @@ router.use(
 );
 router.get("/", checkAuth, async (req, res) => {
   const userID = req.user.userID;
+  const user = await User.findById(userID);
   let allTodos = await Todo.find({ authorId: userID });
   const todos = allTodos.filter((todo) => {
     return (
@@ -46,7 +48,7 @@ router.get("/", checkAuth, async (req, res) => {
     }
   });
 
-  res.status(200).send({ todos });
+  res.status(200).send({ todos,user });
 });
 router.use("/todos", require("./todos").router);
 router.use("/auth", require("./signInAndSignup"));

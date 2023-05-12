@@ -132,5 +132,5 @@ app.use("/api", router);
 
 // listening port
 app.listen(process.env.PORT || 3000, () => {
-  console.log("Server is listening in ", 3000, 'mode : ',process.env.NODE_ENV );
+  console.log("Server is listening in ", process.env.PORT, 'mode : ',process.env.NODE_ENV );
 });

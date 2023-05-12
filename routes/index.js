@@ -31,7 +31,7 @@ router.get("/", checkAuth, async (req, res) => {
       !todo.isLated
     ) {
       todo.isLated = true;
-      return Todo.findByIdAndUpdate(
+      return await Todo.findByIdAndUpdate(
         todo._id,
         todo,
         { new: true },

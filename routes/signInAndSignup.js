@@ -136,7 +136,7 @@ router.get("/user", checkAuth, async (req, res) => {
 router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
   let user = JSON.parse(req.body.form);
   user.pathImage = process.env.HOST + req.file.path;
-  console.log(process.env.HOST + req.file.path)
+  console.log(user)
   const updated = await User.updateOne(
     { _id: user._id },
     { $set: user }

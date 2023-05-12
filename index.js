@@ -7,11 +7,7 @@ const router = require("./routes");
 const fs = require("fs");
 const mime = require("mime");
 //setting node environment variables
-if (process.env.NODE_ENV === "development") {
-  dotenv.config({ path: ".env" });
-} else {
-  dotenv.config({ path: ".env.production" });
-}
+dotenv.config()
 // Set up MIME types
 mime.define(
   {
@@ -135,6 +131,6 @@ app.use("/api", router);
 // app.use(morgan("tiny"));
 
 // listening port
-app.listen(3000, () => {
+app.listen(process.env.PORT || 3000, () => {
   console.log("Server is listening in ", 3000, 'mode : ',process.env.NODE_ENV );
 });

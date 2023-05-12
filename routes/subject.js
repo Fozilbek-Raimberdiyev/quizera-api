@@ -140,6 +140,7 @@ router.get("/", checkAuth, async (req, res) => {
         $or: [
           { authorId: userID },
           { isStarted: true, members: { $elemMatch: { value: user.email } } },
+          {isStarted : true, isForAll : true}
         ],
       })
         .skip((page - 1) * limit)
@@ -154,6 +155,7 @@ router.get("/", checkAuth, async (req, res) => {
                     isStarted: true,
                     members: { $elemMatch: { value: user.email } },
                   },
+                  { isForAll: true, isStarted: true },
                 ],
               },
               (err, count) => {
@@ -249,10 +251,9 @@ router.put("/statusUpdate", checkAuth, async (req, res) => {
     { _id: subjectID },
     { $set: { isStarted: status } }
   );
-  const subjects = await Subject.find({ authorId: req.user.userID });
   return res
     .status(200)
-    .send({ message: "Muvaffaqqiyatli", updated, subjects });
+    .send({ message: "Muvaffaqqiyatli", updated });
 });
 
 //delete subject and subject questions

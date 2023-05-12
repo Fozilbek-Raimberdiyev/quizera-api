@@ -32,9 +32,9 @@ mime.define(
 //connecting to database
 mongoose.set("strictQuery", false);
 mongoose
-  .connect("mongodb+srv://flraimberdiyev:gKNBsYHE1VwWB6es@test.eehlww4.mongodb.net/?retryWrites=true&w=majority", {})
+  .connect(process.env.DB_HOST, {})
   .then(() => {
-    console.log("MongoDB ga ulanish muvaffaqqiyatli amalga oshirildi");
+    console.log("MongoDB ga ulanish muvaffaqqiyatli amalga oshirildi", 'address :' +  process.env.DB_HOST)
   })
   .catch((er) => {
     console.log("MongoDB ga ulanishda xato ro'y berdi", er);
@@ -136,5 +136,5 @@ app.use("/api", router);
 
 // listening port
 app.listen(3000, () => {
-  console.log("Server is listening in ", 3000);
+  console.log("Server is listening in ", 3000, 'mode : ',process.env.NODE_ENV );
 });

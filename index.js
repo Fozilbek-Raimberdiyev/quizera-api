@@ -6,6 +6,7 @@ const dotenv = require("dotenv");
 const router = require("./routes");
 const fs = require("fs");
 const mime = require("mime");
+const morgan = require("morgan")
 //setting node environment variables
 dotenv.config()
 // Set up MIME types
@@ -39,6 +40,9 @@ mongoose
 //declaring app
 const app = express();
 
+//setup websocket
+const server = require("http").Server(app)
+const io = require("socket.io")(server)
 //configuring static files
 app.use(express.static("public"));
 
@@ -111,7 +115,6 @@ app.get("/public/uploads/listening/:filename", (req, res) => {
           .status(400)
           .send({ message: "Fayl ko'rsatilgan tipda emas!" });
       }
-      // console.log(`${__dirname}/public/uploads/listening/${fileName}`)
       return res.sendFile(`${__dirname}/public/uploads/listening/${fileName}`);
     }
   );
@@ -128,9 +131,9 @@ app.use("/api", router);
 // parse application/jsonapp.use(bodyParser.json());
 
 //using morgan logger
-// app.use(morgan("tiny"));
+app.use(morgan("tiny"));
 
 // listening port
-app.listen(process.env.PORT || 3000, () => {
+server.listen(process.env.PORT || 3000, () => {
   console.log("Server is listening in ", process.env.PORT, 'mode : ',process.env.NODE_ENV );
 });

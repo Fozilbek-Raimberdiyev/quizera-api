@@ -9,10 +9,16 @@ const bcryptjs = require("bcryptjs");
 
 //function  check quiz
 function checkQuiz(textArray) {
+  const corrects = [];
+  const incorrects = []
   for(let element of textArray) {
-    if(!element.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
-      element["isCorrectFilled"] = true
-    } element['isSelected'] = true
+    if(!element?.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
+      element['isCorrectFilled'] = true
+    } else if(!element?.isVisible && element.value.toLocaleLowerCase()!=element.label.toLocaleLowerCase()) {
+      element['isCorrectFilled'] = false
+    } else if(!element?.isVisible && element?.value==='' && element?.label) {
+      element['notFilled'] = true
+    }
   }
   return textArray
 }
@@ -24,11 +30,11 @@ function getStatistic(textArray) {
     notFilledWords : 0 
   }
 for(let element of textArray) {
-  if(element.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
+  if(!element.isVisible && element.value.toLocaleLowerCase()===element.label.toLocaleLowerCase()) {
     stat.correctWordsCount++
-  } else if(element.isSelected && !element.isVisible && element.value.toLocaleLowerCase()!=element.label.toLocaleLowerCase()) {
+  } else if(!element.isVisible && element.value.toLocaleLowerCase()!=element.label.toLocaleLowerCase()) {
     stat.inCorrectWordsCount++
-  } else if(!element.isSelected) {
+  } else if(!element.isVisible && element?.value==='') {
     stat.notFilledWords++
   }
 }
@@ -260,7 +266,10 @@ router.delete("/delete", async (req, res) => {
 router.post("/checkPassword", checkAuth, async (req, res) => {
   const { quizID, password } = req.body;
   const existedQuiz = await ListeningQuiz.findById(quizID);
-  let comparedPassword = await bcryptjs.compare(password, existedQuiz.password);
+  if(existedQuiz?.isForAll) {
+    return res.status(200).send({message : "Ushbu fanga parol qo'yilmagan!"})
+  }
+  let comparedPassword =  bcryptjs.compare(password, existedQuiz.password || "");
   if (!comparedPassword) {
     return res.status(400).send({ message: "Parol xato kiritildi..." });
   }

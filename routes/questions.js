@@ -121,15 +121,17 @@ const Question = mongoose.model("questions", questionSchema);
 router.post("/", async (req, res) => {
   let { subjectId, limit, page, config } = req.query;
   let subject = req.body;
-  if(config) {
+  if (config) {
     try {
-      Question.find({subjectId}).skip((+config?.partNumber - 1) * subject?.quizCount)
-      .limit(subject?.quizCount).exec((error, result) => {
-        if(error) {
-          return res.status(400).send({ message: error });
-        }
-        return res.status(200).send({questions : result});
-      })
+      Question.find({ subjectId })
+        .skip((+config?.partNumber - 1) * subject?.quizCount)
+        .limit(subject?.quizCount)
+        .exec((error, result) => {
+          if (error) {
+            return res.status(400).send({ message: error });
+          }
+          return res.status(200).send({ questions: result });
+        });
     } catch (e) {
       return res.status(400).send({ message: e });
     }
@@ -145,43 +147,58 @@ router.post("/", async (req, res) => {
     if (subject?.grades) {
       subject.grades.sort((a, b) => +a.grade - +b.grade);
     }
-  
+
     let newQuestions = [];
-    const result = await Question.find({ subjectId: subjectId })
+    // let result = [];
+    // let total = 0
+    Question.find({ subjectId: subjectId })
       .skip(((page || 1) - 1) * (limit || 5))
-      .limit(limit);
-    let questions = shuffleArray(result);
-    questions.forEach((question) => shuffleArray(question.options));
-    let total = await Question.find({ subjectId: subjectId }).countDocuments();
-    // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
-    if (!subject.isDifferent) {
-      let questionsLimit = [];
-      let temp = [...result].reverse();
-      if (req.query?.forReference) {
-        return res.status(200).send({ total, questions: result });
-      }
-      for (let i = 0; i < subject.quizCount; i++) {
-        questionsLimit.push(questions[i]);
-      }
-      return res.status(200).send({ total, questions: questionsLimit });
-    } else {
-      if (subject?.quizCount > questions.length) {
-        return res.status(200).send(questions);
-      }
-      function generateNewMass(mass) {
-        let newMass = [];
-        let index = 0;
-        mass.forEach((element) => {
-          for (let i = 0; i < +element.count; i++) {
-            newMass[index + i] = generateQuestion(questions, +element.grade);
+      .limit(limit)
+      .exec((error, result) => {
+        if (error) {
+          return res.status(400).send({ message: error });
+        }
+
+        let questions = shuffleArray(result);
+        questions.forEach((question) => shuffleArray(question.options));
+        // let total = await Question.find({ subjectId: subjectId }).countDocuments();
+        // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
+
+        //savollar ballik tizimda emas shart
+        if (!subject.isDifferent) {
+          let questionsLimit = [];
+          let temp = [...result].reverse();
+          if (req.query?.forReference) {
+            return res.status(200).send({ total :  result?.length, questions: result });
           }
-          index += +element.count;
-        });
-        return newMass;
-      }
-      newQuestions = generateNewMass(subject.grades);
-      return res.status(200).send({ questions: newQuestions });
-    }
+          for (let i = 0; i < subject.quizCount; i++) {
+            questionsLimit.push(questions[i]);
+          }
+          return res.status(200).send({ total : result?.length, questions: questionsLimit });
+        }
+        //savollar ballik tizimda bo'lgandagi shart
+        else {
+          if (subject?.quizCount > questions.length) {
+            return res.status(200).send({ questions });
+          }
+          function generateNewMass(mass) {
+            let newMass = [];
+            let index = 0;
+            mass.forEach((element) => {
+              for (let i = 0; i < +element.count; i++) {
+                newMass[index + i] = generateQuestion(
+                  questions,
+                  +element.grade
+                );
+              }
+              index += +element.count;
+            });
+            return newMass;
+          }
+          newQuestions = generateNewMass(subject.grades);
+          return res.status(200).send({ questions: newQuestions, total : result?.length });
+        }
+      });
   }
 });
 
@@ -196,7 +213,9 @@ router.post("/add", checkAuth, async (req, res) => {
   }
   const newQuestion = new Question(value);
   const savedQuestion = await newQuestion.save();
-  return res.status(201).send({savedQuestion, message : "Savol muvaffaqqiyatli qo'shildi"});
+  return res
+    .status(201)
+    .send({ savedQuestion, message: "Savol muvaffaqqiyatli qo'shildi" });
 });
 
 //mark tests
@@ -241,28 +260,36 @@ router.post("/check", checkAuth, async (req, res) => {
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
   if (!point) {
     let resultTest = {
-      testerId : user.userID,
-      testerImagePath : req.user.pathImage,
-      status : sumCorrectAnswers(answers) >= req.body.subject.quizCount * 60 /100  ? 'Passed' : "Failed",
-      workingDurationTime : req.body.workingDurationTime,
-      fullName : user.firstName + " " + user.lastName,
-      subjectId : req.body.subject?._id,
-      subjectName : req.body.subject?.name,
-      workingTime : new Date().getTime(),
-      subjectQuizTime : req.body.subject.time,
-      countCorrectAnswers : sumCorrectAnswers(answers),
-      countIncorrectAnswers : sumIncorrectAnswers(answers),
-      countNotSelectedAnswers : req.body.subject.quizCount - sumCorrectAnswers(answers) - sumIncorrectAnswers(answers),
-      correctAnswers : answers.filter(answer => answer.isCorrectSelected),
-      incorrectAnswers : answers.filter(answer => !answer.isCorrectSelected && answer.isChecked),
-      ball : summBall(answers),
-      questionsCount :  req.body.subject.quizCount,
-      notSelectedAnswers : answers.filter(answer => !answer.isChecked),
-        percentageResult :  (100 * sumCorrectAnswers(answers) )/ req.body.subject.quizCount,
-
-    }
-    let result = await  Result(resultTest);
-    let savedResult = await result.save()
+      testerId: user.userID,
+      testerImagePath: req.user.pathImage,
+      status:
+        sumCorrectAnswers(answers) >= (req.body.subject.quizCount * 60) / 100
+          ? "Passed"
+          : "Failed",
+      workingDurationTime: req.body.workingDurationTime,
+      fullName: user.firstName + " " + user.lastName,
+      subjectId: req.body.subject?._id,
+      subjectName: req.body.subject?.name,
+      workingTime: new Date().getTime(),
+      subjectQuizTime: req.body.subject.time,
+      countCorrectAnswers: sumCorrectAnswers(answers),
+      countIncorrectAnswers: sumIncorrectAnswers(answers),
+      countNotSelectedAnswers:
+        req.body.subject.quizCount -
+        sumCorrectAnswers(answers) -
+        sumIncorrectAnswers(answers),
+      correctAnswers: answers.filter((answer) => answer.isCorrectSelected),
+      incorrectAnswers: answers.filter(
+        (answer) => !answer.isCorrectSelected && answer.isChecked
+      ),
+      ball: summBall(answers),
+      questionsCount: req.body.subject.quizCount,
+      notSelectedAnswers: answers.filter((answer) => !answer.isChecked),
+      percentageResult:
+        (100 * sumCorrectAnswers(answers)) / req.body.subject.quizCount,
+    };
+    let result = await Result(resultTest);
+    let savedResult = await result.save();
 
     return res.status(200).send({
       answers,
@@ -273,9 +300,9 @@ router.post("/check", checkAuth, async (req, res) => {
   } else {
     let resultTest = {
       subjectPoint: point,
-      subjectAuthorId : req.body.subject.authorId,
+      subjectAuthorId: req.body.subject.authorId,
       testerId: req.user.userID,
-      testerImagePath : user.pathImage,
+      testerImagePath: user.pathImage,
       status: isPassed ? "Passed" : "Failed",
       workingDurationTime: req.body.workingDurationTime,
       fullName: user.firstName + " " + user.lastName,

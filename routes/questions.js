@@ -119,55 +119,69 @@ const Question = mongoose.model("questions", questionSchema);
 
 //get all questions
 router.post("/", async (req, res) => {
-  let { subjectId, limit, page } = req.query;
+  let { subjectId, limit, page, config } = req.query;
   let subject = req.body;
-  if (Object.keys(req.body).length === 0 && limit === "0" && page === "0") {
+  if(config) {
     try {
-      let questions = await Question.find({ subjectId: subjectId });
-      return res.status(200).send(questions);
+      Question.find({subjectId}).skip((+config?.partNumber - 1) * subject?.quizCount)
+      .limit(subject?.quizCount).exec((error, result) => {
+        if(error) {
+          return res.status(400).send({ message: error });
+        }
+        return res.status(200).send({questions : result});
+      })
     } catch (e) {
       return res.status(400).send({ message: e });
     }
-  }
-  if (subject?.grades) {
-    subject.grades.sort((a, b) => +a.grade - +b.grade);
-  }
-
-  let newQuestions = [];
-  const result = await Question.find({ subjectId: subjectId })
-    .skip(((page || 1) - 1) * (limit || 5))
-    .limit(limit);
-  let questions = shuffleArray(result);
-  questions.forEach((question) => shuffleArray(question.options));
-  let total = await Question.find({ subjectId: subjectId }).countDocuments();
-  // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
-  if (!subject.isDifferent) {
-    let questionsLimit = [];
-    let temp = [...result].reverse();
-    if (req.query?.forReference) {
-      return res.status(200).send({ total, questions: result });
-    }
-    for (let i = 0; i < subject.quizCount; i++) {
-      questionsLimit.push(questions[i]);
-    }
-    return res.status(200).send({ total, questions: questionsLimit });
   } else {
-    if (subject?.quizCount > questions.length) {
-      return res.status(200).send(questions);
+    if (Object.keys(req.body).length === 0 && limit === "0" && page === "0") {
+      try {
+        let questions = await Question.find({ subjectId: subjectId });
+        return res.status(200).send(questions);
+      } catch (e) {
+        return res.status(400).send({ message: e });
+      }
     }
-    function generateNewMass(mass) {
-      let newMass = [];
-      let index = 0;
-      mass.forEach((element) => {
-        for (let i = 0; i < +element.count; i++) {
-          newMass[index + i] = generateQuestion(questions, +element.grade);
-        }
-        index += +element.count;
-      });
-      return newMass;
+    if (subject?.grades) {
+      subject.grades.sort((a, b) => +a.grade - +b.grade);
     }
-    newQuestions = generateNewMass(subject.grades);
-    return res.status(200).send({ questions: newQuestions });
+  
+    let newQuestions = [];
+    const result = await Question.find({ subjectId: subjectId })
+      .skip(((page || 1) - 1) * (limit || 5))
+      .limit(limit);
+    let questions = shuffleArray(result);
+    questions.forEach((question) => shuffleArray(question.options));
+    let total = await Question.find({ subjectId: subjectId }).countDocuments();
+    // subject.isDifferent = subject?.isDifferent === "true" ? true : false;
+    if (!subject.isDifferent) {
+      let questionsLimit = [];
+      let temp = [...result].reverse();
+      if (req.query?.forReference) {
+        return res.status(200).send({ total, questions: result });
+      }
+      for (let i = 0; i < subject.quizCount; i++) {
+        questionsLimit.push(questions[i]);
+      }
+      return res.status(200).send({ total, questions: questionsLimit });
+    } else {
+      if (subject?.quizCount > questions.length) {
+        return res.status(200).send(questions);
+      }
+      function generateNewMass(mass) {
+        let newMass = [];
+        let index = 0;
+        mass.forEach((element) => {
+          for (let i = 0; i < +element.count; i++) {
+            newMass[index + i] = generateQuestion(questions, +element.grade);
+          }
+          index += +element.count;
+        });
+        return newMass;
+      }
+      newQuestions = generateNewMass(subject.grades);
+      return res.status(200).send({ questions: newQuestions });
+    }
   }
 });
 

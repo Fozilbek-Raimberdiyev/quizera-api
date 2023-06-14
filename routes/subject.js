@@ -93,11 +93,14 @@ router.get("/", checkAuth, async (req, res) => {
   let userID = req.user.userID;
   let user = await User.findById(userID);
   let { limit, page, isForReference } = req.query;
-  limit = Number(req.query.limit)
-  page = Number(req.query.page)
-  isForReference = Boolean(req.query.isForReference)
+  limit = Number(req.query.limit);
+  page = Number(req.query.page);
+  isForReference = Boolean(req.query.isForReference);
   //1-asosiy shart: ro'yhat ma'lumot ustida ishlash uchun so'ralayotgan bo'lsa
-  if (req.query.isForReference === true || req.query.isForReference === 'true') {
+  if (
+    req.query.isForReference === true ||
+    req.query.isForReference === "true"
+  ) {
     if (user.role === "admin") {
       Subject.find()
         .skip((page - 1) * limit)
@@ -140,7 +143,7 @@ router.get("/", checkAuth, async (req, res) => {
         $or: [
           { authorId: userID },
           { isStarted: true, members: { $elemMatch: { value: user.email } } },
-          {isStarted : true, isForAll : true}
+          { isStarted: true, isForAll: true },
         ],
       })
         .skip((page - 1) * limit)
@@ -200,19 +203,25 @@ router.get("/:id", async (req, res) => {
   let id = req.params.id;
   if (id === "undefined" || id === "null")
     return res.status(400).send({ message: "Fan identifikatori topilmadi..." });
-  let subject = await Subject.findById(id);
-  if (!subject) {
-    return res.status(404).json({ message: "Fan topilmadi" });
-  }
+  Subject.findById(id).exec(async (error, result) => {
+    if (error) {
+      return res.status(404).json({ message: "Fan topilmadi" });
+    }
+    // for (let i = 0; i < result.grades.length; i++) {
+    //   const count = await Question.find({
+    //     ball: +result.grades[i].grade,
+    //   }).countDocuments();
+    //   result.grades[i].countQuestions = count ? count : 0;
+    // }
 
-  for (let i = 0; i < subject.grades.length; i++) {
-    const count = await Question.find({
-      ball: +subject.grades[i].grade,
-    }).countDocuments();
-    subject.grades[i].countQuestions = count ? count : 0;
-  }
-  subject.password = undefined;
-  return res.status(200).send(subject);
+    Question.find({ subjectId: id }).exec((error, questions) => {
+      if (error) {
+        return res.status(404).json({ message: "Fan topilmadi" });
+      }
+      result.questionsCountInDB = questions.length ? questions.length : 0;
+      return res.status(200).send({result, questionsCountInDB : questions.length || 0 });
+    });
+  });
 });
 
 //edit subject route
@@ -251,9 +260,7 @@ router.put("/statusUpdate", checkAuth, async (req, res) => {
     { _id: subjectID },
     { $set: { isStarted: status } }
   );
-  return res
-    .status(200)
-    .send({ message: "Muvaffaqqiyatli", updated });
+  return res.status(200).send({ message: "Muvaffaqqiyatli", updated });
 });
 
 //delete subject and subject questions

@@ -121,15 +121,21 @@ const Question = mongoose.model("questions", questionSchema);
 router.post("/", async (req, res) => {
   let { subjectId, limit, page, config } = req.query;
   let subject = req.body;
-  if(config) {
+  if (config) {
     try {
-      Question.find({subjectId}).skip((+config?.partNumber - 1) * subject?.quizCount)
-      .limit(subject?.quizCount).exec((error, result) => {
-        if(error) {
-          return res.status(400).send({ message: error });
-        }
-        return res.status(200).send({questions : result});
-      })
+      Question.find({ subjectId })
+        .skip((+config?.partNumber - 1) * subject?.quizCount)
+        .limit(subject?.quizCount)
+        .exec((error, result) => {
+          if (error) {
+            return res.status(400).send({ message: error });
+          }
+          const temp = result.map((element) => {
+            element.options = shuffleArray(element.options);
+            return element;
+          });
+          return res.status(200).send({ questions: temp });
+        });
     } catch (e) {
       return res.status(400).send({ message: e });
     }
@@ -145,7 +151,7 @@ router.post("/", async (req, res) => {
     if (subject?.grades) {
       subject.grades.sort((a, b) => +a.grade - +b.grade);
     }
-  
+
     let newQuestions = [];
     const result = await Question.find({ subjectId: subjectId })
       .skip(((page || 1) - 1) * (limit || 5))
@@ -185,6 +191,20 @@ router.post("/", async (req, res) => {
   }
 });
 
+// function getRandomNumber() {
+//   return Math.floor(Math.random() * 3) + 1;
+// }
+// async function addQuestionsToDB(array, Model) {
+//   const temp = array.filter((element) => (element?.question ? element : false));
+//   for (let i = 0; i < temp.length; i++) {
+//       const question = new Model(temp[i]);
+//       await question.save();
+//   }
+//   console.log("Savol qo'shish jarayoni yakunlandi")
+// }
+
+// addQuestionsToDB(readyQuestions,Question);
+
 //add question
 router.post("/add", checkAuth, async (req, res) => {
   req.body.ball = req.body.ball || 0;
@@ -196,7 +216,9 @@ router.post("/add", checkAuth, async (req, res) => {
   }
   const newQuestion = new Question(value);
   const savedQuestion = await newQuestion.save();
-  return res.status(201).send({savedQuestion, message : "Savol muvaffaqqiyatli qo'shildi"});
+  return res
+    .status(201)
+    .send({ savedQuestion, message: "Savol muvaffaqqiyatli qo'shildi" });
 });
 
 //mark tests
@@ -241,41 +263,50 @@ router.post("/check", checkAuth, async (req, res) => {
   if (summBall(answers) >= (point * 60) / 100) isPassed = true;
   if (!point) {
     let resultTest = {
-      testerId : user.userID,
-      testerImagePath : req.user.pathImage,
-      status : sumCorrectAnswers(answers) >= req.body.subject.quizCount * 60 /100  ? 'Passed' : "Failed",
-      workingDurationTime : req.body.workingDurationTime,
-      fullName : user.firstName + " " + user.lastName,
-      subjectId : req.body.subject?._id,
-      subjectName : req.body.subject?.name,
-      workingTime : new Date().getTime(),
-      subjectQuizTime : req.body.subject.time,
-      countCorrectAnswers : sumCorrectAnswers(answers),
-      countIncorrectAnswers : sumIncorrectAnswers(answers),
-      countNotSelectedAnswers : req.body.subject.quizCount - sumCorrectAnswers(answers) - sumIncorrectAnswers(answers),
-      correctAnswers : answers.filter(answer => answer.isCorrectSelected),
-      incorrectAnswers : answers.filter(answer => !answer.isCorrectSelected && answer.isChecked),
-      ball : summBall(answers),
-      questionsCount :  req.body.subject.quizCount,
-      notSelectedAnswers : answers.filter(answer => !answer.isChecked),
-        percentageResult :  (100 * sumCorrectAnswers(answers) )/ req.body.subject.quizCount,
-
-    }
-    let result = await  Result(resultTest);
-    let savedResult = await result.save()
+      testerId: user.userID,
+      testerImagePath: req.user.pathImage,
+      status:
+        sumCorrectAnswers(answers) >= (req.body.subject.quizCount * 60) / 100
+          ? "Passed"
+          : "Failed",
+      workingDurationTime: req.body.workingDurationTime,
+      fullName: user.firstName + " " + user.lastName,
+      subjectId: req.body.subject?._id,
+      subjectName: req.body.subject?.name,
+      workingTime: new Date().getTime(),
+      subjectQuizTime: req.body.subject.time,
+      countCorrectAnswers: sumCorrectAnswers(answers),
+      countIncorrectAnswers: sumIncorrectAnswers(answers),
+      countNotSelectedAnswers:
+        req.body.subject.quizCount -
+        sumCorrectAnswers(answers) -
+        sumIncorrectAnswers(answers),
+      correctAnswers: answers.filter((answer) => answer.isCorrectSelected),
+      incorrectAnswers: answers.filter(
+        (answer) => !answer.isCorrectSelected && answer.isChecked
+      ),
+      ball: summBall(answers),
+      questionsCount: req.body.subject.quizCount,
+      notSelectedAnswers: answers.filter((answer) => !answer.isChecked),
+      percentageResult:
+        (100 * sumCorrectAnswers(answers)) / req.body.subject.quizCount,
+    };
+    let result = await Result(resultTest);
+    let savedResult = await result.save();
 
     return res.status(200).send({
       answers,
       correctAnswersCount: sumCorrectAnswers(answers),
       inCorrectAnswersCount: sumIncorrectAnswers(answers),
       notCheckedQuestionsCount: sumNotCheckedQuestions(answers),
+      sum: summBall(answers),
     });
   } else {
     let resultTest = {
       subjectPoint: point,
-      subjectAuthorId : req.body.subject.authorId,
+      subjectAuthorId: req.body.subject.authorId,
       testerId: req.user.userID,
-      testerImagePath : user.pathImage,
+      testerImagePath: user.pathImage,
       status: isPassed ? "Passed" : "Failed",
       workingDurationTime: req.body.workingDurationTime,
       fullName: user.firstName + " " + user.lastName,

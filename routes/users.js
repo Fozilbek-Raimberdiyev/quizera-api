@@ -58,6 +58,10 @@ userSchema.pre('save', function(next) {
 });
 
 
+// DBda qo'lda parol kiritish uchun
+// const parol = bcryptjs.hashSync("student", SALT_ROUNDS);
+// console.log(parol)
+
 //User model defining
 let User = mongoose.model("users", userSchema);
 

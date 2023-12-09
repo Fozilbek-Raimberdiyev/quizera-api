@@ -53,11 +53,7 @@ app.use(bodyParser.urlencoded({ limit: "6mb", extended: true }));
 //using cors
 app.use(
   cors({
-    origin: [
-      "https://fozilbek.netlify.app",
-      "http://localhost:8080",
-      "http://localhost:5173",
-    ], // replace with the actual origin of your Vue.js app
+    origin: "*", // replace with the actual origin of your Vue.js app
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })

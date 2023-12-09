@@ -7,7 +7,7 @@ const authCheck = require("../middleware/auth")
 //get permissions list
 router.get("/", authCheck, async(req, res) => {
     let permissions = await Permission.find();
-    res.status(200).json({permissions})
+  return  res.status(200).json({permissions})
 })
 
 

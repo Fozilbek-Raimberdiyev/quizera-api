@@ -8,13 +8,13 @@ const SALT_ROUNDS = 10;
 const userSchema = mongoose.Schema({
   firstName: String,
   lastName: String,
-  birdthData: String,
+  birthData: String,
   email: {
     type : String,
     unique : true
   },
   phoneNumber: {
-    type : Number,
+    type : String,
     unique : true
   },
   role: String,
@@ -31,12 +31,12 @@ const userSchema = mongoose.Schema({
 const userValSchema = Joi.object({
   firstName: Joi.string().min(5).max(30).required(),
   lastName: Joi.string().min(5).max(30).required(),
-  birdthData: Joi.string().required(),
+  birthData: Joi.string().required(),
   email: Joi.string().email().required(),
-  phoneNumber: Joi.number().required(),
+  phoneNumber: Joi.string().required(),
   role: Joi.string().required(),
-  permissions: Joi.string(),
-  password: Joi.string().pattern(new RegExp("^[a-zA-Z0-9]{3,30}$")).required(),
+  permissions: Joi.array(),
+  password: Joi.string().min(8).required(),
   dataRegister : Joi.number()
 });
 

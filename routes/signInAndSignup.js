@@ -4,20 +4,19 @@ const bcryptjs = require("bcryptjs");
 const router = Router();
 const jwt = require("jsonwebtoken");
 const checkAuth = require("../middleware/auth");
-const multer =require("multer")
+const multer = require("multer");
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
     callback(null, `public/uploads/`);
   },
   filename: function (req, file, callback) {
-    const filename = file.originalname.split(" ").join("_")
+    const filename = file.originalname.split(" ").join("_");
     callback(null, filename);
   },
 });
 const upload = multer({
   storage: storage,
 });
-
 
 router.post("/login", async (req, res) => {
   let { email, password } = req.body;
@@ -39,7 +38,7 @@ router.post("/login", async (req, res) => {
   // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
   let payload = {
     userID: existedUser._id,
-    email : existedUser.email
+    email: existedUser.email,
   };
   const token = jwt.sign(payload, process.env.JSON_SIGNATURE, {
     expiresIn: 60 * 60 * 24,
@@ -83,7 +82,7 @@ router.post("/register", async (req, res) => {
     // let jsonSignature = await bcryptjs.hash(process.env.JSON_SIGNATURE, 10);
     let payload = {
       userID: savedUser._id,
-      email: savedUser.email
+      email: savedUser.email,
     };
     const token = jwt.sign(payload, process.env.JSON_SIGNATURE, {
       expiresIn: 60 * 60 * 24,
@@ -120,7 +119,7 @@ router.get("/:id/user", checkAuth, async (req, res) => {
     return res.status(400).send({ message: "Bad request" });
   }
   let user = await User.findById(id);
-  user.password = undefined
+  user.password = undefined;
   return res.status(200).send(user);
 });
 
@@ -133,16 +132,17 @@ router.get("/user", checkAuth, async (req, res) => {
 });
 
 //update user
-router.put("/updateUser",upload.single("file"), checkAuth, async(req, res) => {
-  let user = JSON.parse(req.body.form);
-  user.pathImage = process.env.HOST + req.file.path;
-  console.log(user)
-  const updated = await User.updateOne(
-    { _id: user._id },
-    { $set: user }
-  );
-  return res.status(200).send({message : "Muvaffaqqiyatli", updated, user})
-})
+router.put(
+  "/updateUser",
+  upload.single("file"),
+  checkAuth,
+  async (req, res) => {
+    let user = JSON.parse(req.body.form);
+    user.pathImage = process.env.HOST + req.file.path;
+    const updated = await User.updateOne({ _id: user._id }, { $set: user });
+    return res.status(200).send({ message: "Muvaffaqqiyatli", updated, user });
+  }
+);
 
 //delete user
 router.delete("/delete", async (req, res) => {
@@ -150,8 +150,8 @@ router.delete("/delete", async (req, res) => {
     if (err) {
       return res.status(500).json({ message: "Error deleting user" });
     }
-    
-if (!data) {
+
+    if (!data) {
       return res.status(404).json({ message: "User not found" });
     }
     return res.json({ message: "User succesfully deleted" });

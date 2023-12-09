@@ -41,17 +41,15 @@ router.get("/", checkAuth, async (req, res) => {
         .limit(pageLimit)
         .exec((err, results) => {
           if (!err) {
-            Result.countDocuments({testerId : userID}, (err,count) => {
-              return res.status(200).send({ results, total : count});
-            })
-            
+            Result.countDocuments({ testerId: userID }, (err, count) => {
+              return res.status(200).send({ results, total: count });
+            });
           }
         });
     } catch (e) {
-      console.log(e)
-    }
-    finally{
-      return 
+      console.log(e);
+    } finally {
+      return;
     }
   }
   if (query === "mySubjects") {
@@ -65,10 +63,9 @@ router.get("/", checkAuth, async (req, res) => {
           }
         });
     } catch (e) {
-      return res.send({message : e.message})
-    }
-    finally {
-      return
+      return res.send({ message: e.message });
+    } finally {
+      return;
     }
   }
   if (query === "all") {
@@ -80,14 +77,13 @@ router.get("/", checkAuth, async (req, res) => {
           if (!err) {
             Result.countDocuments((e, count) => {
               return res.status(200).send({ results, total: count });
-            })
+            });
           }
         });
     } catch (e) {
-      return res.send({message : e.message})
-    }
-    finally {
-      return
+      return res.send({ message: e.message });
+    } finally {
+      return;
     }
   }
   return res.status(400).send({ message: "Xatolik yuz berdi!" });

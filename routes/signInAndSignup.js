@@ -138,7 +138,8 @@ router.put(
   checkAuth,
   async (req, res) => {
     let user = JSON.parse(req.body.form);
-    user.pathImage = process.env.HOST + req.file.path;
+    user.pathImage = "/uploads/" + req.file.originalname;
+
     const updated = await User.updateOne({ _id: user._id }, { $set: user });
     return res.status(200).send({ message: "Muvaffaqqiyatli", updated, user });
   }

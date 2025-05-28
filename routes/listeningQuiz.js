@@ -43,7 +43,7 @@ return stat
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, 'public/uploads/listening/');
+    callback(null, '/uploads/listening/');
   },
   filename: function (req, file, callback) {
     callback(null, file.originalname);

@@ -5,11 +5,25 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const router = require("./routes");
 const fs = require("fs");
-// const mime = require("mime");
+const mime = require("mime");
 const morgan = require("morgan")
 //setting node environment variables
 dotenv.config()
-
+// Set up MIME types
+mime.define(
+  {
+    "text/css": ["css"],
+    "image/png": ["png"],
+    "image/jpeg": ["jpg", "jpeg"],
+    "application/pdf": ["pdf"],
+    "audio/mpeg": ["mp3"],
+    "audio/wav": ["wav"],
+    "audio/ogg": ["ogg"],
+    "audio/midi": ["midi"],
+    "audio/webm": ["webm"],
+  },
+  { force: true }
+);
 
 
 //connecting to database

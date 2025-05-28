@@ -43,7 +43,7 @@ return stat
 
 const storage = multer.diskStorage({
   destination: function (req, file, callback) {
-    callback(null, '/uploads/listening/');
+    callback(null, 'public/uploads/listening/');
   },
   filename: function (req, file, callback) {
     callback(null, file.originalname);
@@ -166,7 +166,8 @@ router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
   const audio = req.file;
   let body = JSON.parse(req.body.form);
   if (audio!=null || audio!=undefined) {
-    body["audioPath"] = audio.path;
+    console.log(audio.originalname)
+    body["audioPath"] = "/uploads/listening/" + audio.originalname;
   }
   const { error, value } = listeningQuizValSchema.validate(body);
   if (error) {

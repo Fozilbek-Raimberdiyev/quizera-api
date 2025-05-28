@@ -180,7 +180,12 @@ router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
     return res
       .status(200)
       .send({ message: "Muvaffaqqiyatli", quizs: all, total });
-  } catch (e) {}
+  } catch (e) {
+    return res.status(500).send({
+      message: "Xatolik yuz berdi, qayta urinib ko'ring!",
+      error: e.message,
+    });
+  }
 });
 
 //get by id

@@ -166,7 +166,7 @@ router.post("/add", upload.single("audio"), checkAuth, async (req, res) => {
   const audio = req.file;
   let body = JSON.parse(req.body.form);
   if (audio!=null || audio!=undefined) {
-    body["audioPath"] = process.env.HOST + audio.path;
+    body["audioPath"] = audio.path;
   }
   const { error, value } = listeningQuizValSchema.validate(body);
   if (error) {
@@ -201,7 +201,7 @@ router.put("/update", upload.single("audio"), checkAuth, async (req, res) => {
   let body = JSON.parse(req.body.form);
   let audio = req.file
   if (audio!=null || audio!=undefined) {
-    body["audioPath"] = process.env.HOST + audio.path;
+    body["audioPath"] = audio.path;
   }
   const { error, value } = listeningQuizValSchema.validate(body);
   if (error) {
